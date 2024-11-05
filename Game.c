@@ -62,9 +62,11 @@ int main() {
         if (p1k) {
             // Tela de game over
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER ÓTARIO");
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione ESPAÇO para sair");
             al_flip_display();
             if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_SPACE) break;
+            if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
         } else {
             if (event.type == ALLEGRO_EVENT_TIMER) {
                 frame_count++;
@@ -94,7 +96,7 @@ int main() {
                 }
 
                 // Gera novos inimigos que atiram aleatoriamente
-                if (rand() % 150 == 0) {
+                if (rand() % 200 == 0) {
                     float new_x = X_SCREEN;
                     float new_y = rand() % Y_SCREEN;
 
