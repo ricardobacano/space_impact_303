@@ -9,6 +9,7 @@
 #include "Enemy.h"  
 #include "Score.h"  
 #include "ShooterEnemy.h"
+#include "Scrap.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -18,7 +19,6 @@
 
 float enemy_speed = INITIAL_ENEMY_SPEED;
 int frame_count = 0;
-
 
 int main() {
     al_init();
@@ -52,6 +52,9 @@ int main() {
     Enemy *enemies = NULL;
     ShooterEnemy* shooter_enemies = NULL;
 
+    Scrap *scrap_list = NULL;
+    int scrap_count = 0; // Contador de sucata
+
     ALLEGRO_EVENT event;
     al_start_timer(timer);
     unsigned char p1k = 0;
@@ -62,7 +65,7 @@ int main() {
         if (p1k) {
             // Tela de game over
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER ÓTARIO");
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER");
             al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione ESPAÇO para sair");
             al_flip_display();
             if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_SPACE) break;
@@ -111,6 +114,18 @@ int main() {
                     }
                 }
 
+                // Gera novas sucatas aleatoriamente
+                if (rand() % 100 == 0) {
+                    float new_x = X_SCREEN;
+                    float new_y = rand() % Y_SCREEN;
+
+                    Scrap *new_scrap = create_scrap(new_x, new_y);
+                    if (new_scrap) {
+                        new_scrap->next = scrap_list;
+                        scrap_list = new_scrap;
+                    }
+                }
+
                 // Atualiza atiradores para atirar a cada intervalo de tempo
                 ShooterEnemy *current_shooter = shooter_enemies;
                 while (current_shooter != NULL) {
@@ -120,33 +135,75 @@ int main() {
                     current_shooter = current_shooter->next;
                 }
 
+                // Atualiza os elementos do jogo
                 update_position(player_1);
                 update_bullets(player_1);
-                update_enemies(&enemies, enemy_speed);          
-                update_shooter_enemy(&shooter_enemies);         
+                update_enemies(&enemies, enemy_speed);
+                update_shooter_enemy(&shooter_enemies);
                 move_shooter_bullets(shooter_enemies, player_1);
+                move_scrap(scrap_list, enemy_speed);
 
+                // Verifica colisões
                 check_collision_with_player(player_1, &enemies);
                 check_kill(player_1, &enemies, score);
                 check_kill_shooter_enemies(player_1, &shooter_enemies, score);
 
-                p1k = (player_1->hp <= 0) ? 1 : 0;
+                // Verifica colisão com sucata
+                Scrap *prev_scrap = NULL;
+                Scrap *current_scrap = scrap_list;
 
-                healthbar_update(player_1_healthbar, player_1->hp);
+                while (current_scrap != NULL) {
+                    if ((player_1->x + player_1->side / 2 >= current_scrap->x - 5) &&
+                        (player_1->x - player_1->side / 2 <= current_scrap->x + 5) &&
+                        (player_1->y + player_1->side / 2 >= current_scrap->y - 5) &&
+                        (player_1->y - player_1->side / 2 <= current_scrap->y + 5)) {
+                        
+                        // Incrementa o contador de sucata
+                        scrap_count++;
 
+                        // Remove a sucata coletada da lista
+                        if (prev_scrap) {
+                            prev_scrap->next = current_scrap->next;
+                            destroy_scrap(current_scrap);
+                            current_scrap = prev_scrap->next;
+                        } else {
+                            scrap_list = current_scrap->next;
+                            destroy_scrap(current_scrap);
+                            current_scrap = scrap_list;
+                        }
+                    } else {
+                        prev_scrap = current_scrap;
+                        current_scrap = current_scrap->next;
+                    }
+                }
+
+                // Desenha todos os elementos
                 al_clear_to_color(al_map_rgb(0, 0, 0));
+                
+                // Desenha a barra de vida
                 healthbar_draw(player_1_healthbar);
 
+                // Desenha o contador de sucata ao lado da barra de vida
+                char scrap_text[50];
+                al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);  // Texto abaixo da barra de vida
+
+                // Desenha o jogador
                 al_draw_filled_rectangle(player_1->x - player_1->side / 2, player_1->y - player_1->side / 2,
                                          player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
                                          al_map_rgb(255, 0, 0));
 
+                // Desenha os inimigos comuns
                 draw_enemies(enemies);
 
+                // Desenha as sucatas
+                draw_scrap(scrap_list);
+
+                // Desenha os tiros do jogador
                 for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
                     al_draw_filled_circle(index->x, index->y, 2, al_map_rgb(255, 0, 0));
                 }
 
+                // Desenha os inimigos que atiram e seus tiros
                 for (ShooterEnemy *shooter = shooter_enemies; shooter != NULL; shooter = shooter->next) {
                     al_draw_filled_rectangle(shooter->x - 10, shooter->y - 10, shooter->x + 10, shooter->y + 10, al_map_rgb(0, 0, 255));
                     for (bullet_enemy *index = shooter->shots; index != NULL; index = index->next) {
@@ -154,11 +211,13 @@ int main() {
                     }
                 }
 
+                // Desenha a pontuação
                 score_draw(score);
 
                 if (player_1->gun->timer) player_1->gun->timer--;
 
                 al_flip_display();
+
             } else if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
                 if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
                 } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
@@ -172,16 +231,17 @@ int main() {
                 } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 0;  
                 } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 0;  
                 } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 0;  
-    }
-
+                }
             } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                 break;
             }
         }
     }
 
+    // Limpeza dos recursos alocados
     destroy_all_enemies(enemies);
     destroy_all_shooter_enemies(shooter_enemies);
+    destroy_all_scrap(scrap_list);
     healthbar_destroy(player_1_healthbar);
     score_destroy(score);
     al_destroy_font(font);
