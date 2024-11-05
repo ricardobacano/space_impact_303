@@ -2,6 +2,7 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "Square.h"
 #include "HealthBar.h"
@@ -65,7 +66,7 @@ int main() {
         if (p1k) {
             // Tela de game over
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER OTÁRIO");
             al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione ESPAÇO para sair");
             al_flip_display();
             if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_SPACE) break;
@@ -115,7 +116,7 @@ int main() {
                 }
 
                 // Gera novas sucatas aleatoriamente
-                if (rand() % 100 == 0) {
+                if (rand() % 500 == 0) {
                     float new_x = X_SCREEN;
                     float new_y = rand() % Y_SCREEN;
 
@@ -147,6 +148,9 @@ int main() {
                 check_collision_with_player(player_1, &enemies);
                 check_kill(player_1, &enemies, score);
                 check_kill_shooter_enemies(player_1, &shooter_enemies, score);
+
+                healthbar_update(player_1_healthbar, player_1->hp);
+                p1k = (player_1->hp <= 0) ? 1 : 0;
 
                 // Verifica colisão com sucata
                 Scrap *prev_scrap = NULL;
@@ -185,6 +189,7 @@ int main() {
 
                 // Desenha o contador de sucata ao lado da barra de vida
                 char scrap_text[50];
+                snprintf(scrap_text, 50, "Sucata: %d", scrap_count);
                 al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);  // Texto abaixo da barra de vida
 
                 // Desenha o jogador
