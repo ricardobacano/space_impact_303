@@ -63,13 +63,27 @@ unsigned char check_kill_shooter_enemies(square *player, ShooterEnemy **shooter_
 }
 
 void update_shooter_enemy(ShooterEnemy **head) {
+    ShooterEnemy *previous = NULL;
     ShooterEnemy *current = *head;
 
     while (current != NULL) {
-        current = current->next;
+        current->x -= ENEMY_SPEED;  // Move os inimigos da direita para a esquerda
+
+        if (current->x < 0) {  // Se o inimigo sair da tela, removê-lo
+            if (previous) {
+                previous->next = current->next;
+            } else {
+                *head = current->next;
+            }
+            ShooterEnemy *to_destroy = current;
+            current = current->next;
+            destroy_shooter_enemy(to_destroy);
+        } else {
+            previous = current;
+            current = current->next;
+        }
     }
 }
-
 unsigned char check_collision_with_shooter_enemies(float x, float y, ShooterEnemy *head) {
     for (ShooterEnemy *current = head; current != NULL; current = current->next) {
         float distance_x = current->x - x;
@@ -124,6 +138,36 @@ void move_shooter_bullets(ShooterEnemy *head, square *player) {
             prev_bullet = bullet_ptr;
             bullet_ptr = bullet_ptr->next;
         }
+    }
+}
+
+unsigned char check_collision_with_player_shooter_enemy(square *player, ShooterEnemy **shooter_enemies) {
+    ShooterEnemy *previous = NULL;
+    ShooterEnemy *current = *shooter_enemies;
+
+    while (current != NULL) {
+        // Verifica se há colisão entre o player e o shooter enemy
+        if ((player->x + player->side / 2 >= current->x - 10) && (player->x - player->side / 2 <= current->x + 10) &&
+            (player->y + player->side / 2 >= current->y - 10) && (player->y - player->side / 2 <= current->y + 10)) {
+            
+            // Reduz a vida do player em um valor fixo
+            player->hp -= 20;
+
+            // Remove o shooter enemy da lista, pois ele foi destruído
+            if (previous) {
+                previous->next = current->next;
+            } else {
+                *shooter_enemies = current->next;
+            }
+            
+            destroy_shooter_enemy(current);
+            return 1; 
+        }
+
+        previous = current;
+        current = current->next;
+
+        return 0;
     }
 }
 

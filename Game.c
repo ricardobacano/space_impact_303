@@ -40,7 +40,7 @@ int main() {
 
     square* player_1 = square_create(20, 1, 10, Y_SCREEN / 2, X_SCREEN, Y_SCREEN);
     if (!player_1) return 1;
-    player_1->hp = 200;
+    player_1->hp = 100;
 
     HealthBar *player_1_healthbar = healthbar_create(10, 10, player_1->hp);
 

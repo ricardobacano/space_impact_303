@@ -1,7 +1,7 @@
 #ifndef __BULLET__
 #define __BULLET__
 
-#define BULLET_MOVE 6
+#define BULLET_MOVE 10
 
 typedef struct bullet {
     unsigned short x;                    // Localização no eixo x da bala
