@@ -105,7 +105,6 @@ unsigned char check_kill(square *player, Enemy **enemies, Score *score) {
                 if (current->hp <= 0) {
                     score_increment(score, 10);
                     
-                    // Remove o inimigo comum da lista
                     if (previous) {
                         previous->next = current->next;
                     } else {
@@ -115,7 +114,6 @@ unsigned char check_kill(square *player, Enemy **enemies, Score *score) {
                     return 1;
                 }
 
-                // Remove o projétil do jogador após o impacto
                 if (prev_bullet) {
                     prev_bullet->next = index->next;
                 } else {
@@ -130,4 +128,16 @@ unsigned char check_kill(square *player, Enemy **enemies, Score *score) {
         current = current->next;
     }
     return 0;
+}
+
+unsigned char check_collision_with_enemies(float x, float y, Enemy *enemies) {
+    Enemy *current_enemy = enemies;
+    while (current_enemy != NULL) {
+        if ((x >= current_enemy->x - 20 && x <= current_enemy->x + 20) &&
+            (y >= current_enemy->y - 20 && y <= current_enemy->y + 20)) {
+            return 1; 
+        }
+        current_enemy = current_enemy->next;
+    }
+    return 0;  
 }

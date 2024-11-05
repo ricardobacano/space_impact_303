@@ -7,7 +7,7 @@ void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, 
     al_clear_to_color(al_map_rgb(0, 0, 0));
 
     al_draw_text(font, al_map_rgb(255, 255, 255), al_get_display_width(display) / 2,
-                 al_get_display_height(display) / 2 - 50, ALLEGRO_ALIGN_CENTER, "AGGRESSIVE SQUARES");
+                 al_get_display_height(display) / 2 - 50, ALLEGRO_ALIGN_CENTER, "SPACE IMPACT 303");
 
     al_draw_text(font, al_map_rgb(255, 255, 255), al_get_display_width(display) / 2,
                  al_get_display_height(display) / 2, ALLEGRO_ALIGN_CENTER, "Pressione ENTER para iniciar");

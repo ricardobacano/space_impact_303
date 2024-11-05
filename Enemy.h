@@ -20,7 +20,7 @@ void draw_enemies(Enemy *head);
 void destroy_enemy(Enemy *enemy);
 void destroy_all_enemies(Enemy *head);
 void check_collision_with_player(square *player, Enemy **enemies);
-
 unsigned char check_kill(square *player, Enemy **enemies, Score *score);
+unsigned char check_collision_with_enemies(float x, float y, Enemy *enemies);
 
 #endif  
