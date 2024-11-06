@@ -12,6 +12,7 @@
 #include "ShooterEnemy.h"
 #include "Scrap.h"
 #include "Boss.h"
+#include "FPS.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -64,6 +65,7 @@ int main() {
     al_start_timer(timer);
     unsigned char p1k = 0;
     bool is_paused = false;  // Variável para controlar se o jogo está em pausa
+    bool is_double_speed = false;  
 
     while (1) {
         al_wait_for_event(queue, &event);
@@ -78,6 +80,10 @@ int main() {
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
         } else {
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+                if (event.keyboard.keycode == ALLEGRO_KEY_2) {
+                    // Chama a função para alternar a velocidade do jogo
+                    toggle_game_speed(timer, &is_double_speed);
+                }
                 // Detectar a tecla "P" para alternar entre pausa e continuar
                 if (event.keyboard.keycode == ALLEGRO_KEY_P) {
                     is_paused = !is_paused;  // Alterna o estado de pausa
@@ -124,6 +130,63 @@ int main() {
                         }
                     }
 
+                    if (enemy_speed == MAX_ENEMY_SPEED && boss == NULL) {
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);  // Cria o boss no lado direito da tela, no meio verticalmente
+                        printf("Boss apareceu automaticamente!\n");
+                    }
+
+                    // Gera novos inimigos comuns aleatoriamente
+                    if (boss == NULL && rand() % 50 == 0) {
+                        float new_x = X_SCREEN;
+                        float new_y = rand() % Y_SCREEN;
+
+                        // Verifica colisão com outros inimigos antes de criar um novo
+                        if (!check_collision_with_enemies(new_x, new_y, enemies) &&
+                            !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
+                            Enemy *new_enemy = create_enemy(new_x, new_y, 10);
+                            if (new_enemy) {
+                                new_enemy->next = enemies;
+                                enemies = new_enemy;
+                            }
+                        }
+                    }
+
+                    // Gera novos inimigos que atiram aleatoriamente
+                    if (boss == NULL && rand() % 200 == 0) {
+                        float new_x = X_SCREEN;
+                        float new_y = rand() % Y_SCREEN;
+
+                        // Verifica colisão com outros inimigos antes de criar um novo
+                        if (!check_collision_with_enemies(new_x, new_y, enemies) &&
+                            !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
+                            ShooterEnemy *new_shooter = create_shooter_enemy(new_x, new_y, 15);
+                            if (new_shooter) {
+                                new_shooter->next = shooter_enemies;
+                                shooter_enemies = new_shooter;
+                            }
+                        }
+                    }
+
+                    if (rand() % 500 == 0) {
+                    float new_x = X_SCREEN;
+                    float new_y = rand() % Y_SCREEN;
+
+                    Scrap *new_scrap = create_scrap(new_x, new_y);
+                    if (new_scrap) {
+                        new_scrap->next = scrap_list;
+                        scrap_list = new_scrap;
+                        }
+                    }
+
+                    // Faz com que os inimigos azuis atirem a cada certo número de frames
+                    ShooterEnemy *current_shooter = shooter_enemies;
+                    while (current_shooter != NULL) {
+                        if (frame_count % 100 == 0) { // A cada 100 frames aproximadamente
+                            shooter_enemy_shoot(current_shooter);
+                        }
+                        current_shooter = current_shooter->next;
+                    }
+
                     // Atualiza o Boss se ele estiver presente
                     if (boss != NULL) {
                         update_boss(boss);
@@ -152,6 +215,33 @@ int main() {
                     p1k = (player_1->hp <= 0) ? 1 : 0;
                 }
 
+                Scrap *prev_scrap = NULL;
+                Scrap *current_scrap = scrap_list;
+
+                while (current_scrap != NULL) {
+                    if ((player_1->x + player_1->side / 2 >= current_scrap->x - 5) &&
+                        (player_1->x - player_1->side / 2 <= current_scrap->x + 5) &&
+                        (player_1->y + player_1->side / 2 >= current_scrap->y - 5) &&
+                        (player_1->y - player_1->side / 2 <= current_scrap->y + 5)) {
+                        
+                        // Incrementa o contador de sucata
+                        scrap_count++;
+
+                        // Remove a sucata coletada da lista
+                        if (prev_scrap) {
+                            prev_scrap->next = current_scrap->next;
+                            destroy_scrap(current_scrap);
+                            current_scrap = prev_scrap->next;
+                        } else {
+                            scrap_list = current_scrap->next;
+                            destroy_scrap(current_scrap);
+                            current_scrap = scrap_list;
+                        }
+                    } else {
+                        prev_scrap = current_scrap;
+                        current_scrap = current_scrap->next;
+                    }
+                }
                 // Desenha todos os elementos
                 al_clear_to_color(al_map_rgb(0, 0, 0));
                 
@@ -165,8 +255,8 @@ int main() {
 
                 // Desenha o jogador
                 al_draw_filled_rectangle(player_1->x - player_1->side / 2, player_1->y - player_1->side / 2,
-                                         player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
-                                         al_map_rgb(255, 0, 0));
+                                        player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
+                                        al_map_rgb(255, 0, 0));
 
                 // Desenha os inimigos comuns
                 draw_enemies(enemies);
@@ -204,7 +294,7 @@ int main() {
                 }
 
                 al_flip_display();
-            } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+            }else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                 break;
             }
         }
