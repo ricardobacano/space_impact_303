@@ -1,14 +1,14 @@
 # Definições de compilador e flags
 CC = gcc
-CFLAGS = -Wall -std=c99 $(shell pkg-config --cflags allegro-5 allegro_font-5 allegro_primitives-5)
+CFLAGS = -Wall -Wextra -Werror -pedantic -std=c99 -O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined $(shell pkg-config --cflags allegro-5 allegro_font-5 allegro_primitives-5)
 LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_font-5 allegro_primitives-5)
 
-# Arquivos-fonte e de objetos
-SOURCES = AggressiveSquares.c Square.c HealthBar.c StartScreen.c Enemy.c ShooterEnemy.c Pistol.c Bullet.c Score.c
+# Utiliza wildcard para encontrar todos os arquivos .c na pasta atual
+SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
 
 # Nome do executável
-EXECUTABLE = AggressiveSquares
+EXECUTABLE = space_impact
 
 # Regras principais
 all: $(EXECUTABLE)
@@ -20,7 +20,7 @@ $(EXECUTABLE): $(OBJECTS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpa os arquivos gerados durante a compilação
+# Limpa os arquivos gerados durante a compilacão
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
 
