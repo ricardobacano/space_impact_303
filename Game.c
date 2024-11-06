@@ -11,6 +11,7 @@
 #include "Score.h"  
 #include "ShooterEnemy.h"
 #include "Scrap.h"
+#include "Boss.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -56,9 +57,13 @@ int main() {
     Scrap *scrap_list = NULL;
     int scrap_count = 0; // Contador de sucata
 
+    // Variável para o boss
+    Boss *boss = NULL;
+
     ALLEGRO_EVENT event;
     al_start_timer(timer);
     unsigned char p1k = 0;
+    bool is_paused = false;  // Variável para controlar se o jogo está em pausa
 
     while (1) {
         al_wait_for_event(queue, &event);
@@ -72,113 +77,79 @@ int main() {
             if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_SPACE) break;
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
         } else {
-            if (event.type == ALLEGRO_EVENT_TIMER) {
-                frame_count++;
-
-                // Aumenta a velocidade dos inimigos a cada 600 frames (~20 segundos se 30 FPS)
-                if (frame_count % 600 == 0) {
-                    enemy_speed += SPEED_INCREMENT;
-                    if (enemy_speed > MAX_ENEMY_SPEED) {
-                        enemy_speed = MAX_ENEMY_SPEED;
-                    }
-                }
-
-                // Gera novos inimigos comuns aleatoriamente
-                if (rand() % 50 == 0) {
-                    float new_x = X_SCREEN;
-                    float new_y = rand() % Y_SCREEN;
-
-                    // Verifica colisão com outros inimigos antes de criar um novo
-                    if (!check_collision_with_enemies(new_x, new_y, enemies) &&
-                        !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
-                        Enemy *new_enemy = create_enemy(new_x, new_y, 10);
-                        if (new_enemy) {
-                            new_enemy->next = enemies;
-                            enemies = new_enemy;
-                        }
-                    }
-                }
-
-                // Gera novos inimigos que atiram aleatoriamente
-                if (rand() % 200 == 0) {
-                    float new_x = X_SCREEN;
-                    float new_y = rand() % Y_SCREEN;
-
-                    // Verifica colisão com outros inimigos antes de criar um novo
-                    if (!check_collision_with_enemies(new_x, new_y, enemies) &&
-                        !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
-                        ShooterEnemy *new_shooter = create_shooter_enemy(new_x, new_y, 15);
-                        if (new_shooter) {
-                            new_shooter->next = shooter_enemies;
-                            shooter_enemies = new_shooter;
-                        }
-                    }
-                }
-
-                // Gera novas sucatas aleatoriamente
-                if (rand() % 500 == 0) {
-                    float new_x = X_SCREEN;
-                    float new_y = rand() % Y_SCREEN;
-
-                    Scrap *new_scrap = create_scrap(new_x, new_y);
-                    if (new_scrap) {
-                        new_scrap->next = scrap_list;
-                        scrap_list = new_scrap;
-                    }
-                }
-
-                // Atualiza atiradores para atirar a cada intervalo de tempo
-                ShooterEnemy *current_shooter = shooter_enemies;
-                while (current_shooter != NULL) {
-                    if (frame_count % 100 == 0) {
-                        shooter_enemy_shoot(current_shooter);
-                    }
-                    current_shooter = current_shooter->next;
-                }
-
-                // Atualiza os elementos do jogo
-                update_position(player_1);
-                update_bullets(player_1);
-                update_enemies(&enemies, enemy_speed);
-                update_shooter_enemy(&shooter_enemies);
-                move_shooter_bullets(shooter_enemies, player_1);
-                move_scrap(scrap_list, enemy_speed);
-
-                // Verifica colisões
-                check_collision_with_player(player_1, &enemies);
-                check_kill(player_1, &enemies, score);
-                check_kill_shooter_enemies(player_1, &shooter_enemies, score);
-
-                healthbar_update(player_1_healthbar, player_1->hp);
-                p1k = (player_1->hp <= 0) ? 1 : 0;
-
-                // Verifica colisão com sucata
-                Scrap *prev_scrap = NULL;
-                Scrap *current_scrap = scrap_list;
-
-                while (current_scrap != NULL) {
-                    if ((player_1->x + player_1->side / 2 >= current_scrap->x - 5) &&
-                        (player_1->x - player_1->side / 2 <= current_scrap->x + 5) &&
-                        (player_1->y + player_1->side / 2 >= current_scrap->y - 5) &&
-                        (player_1->y - player_1->side / 2 <= current_scrap->y + 5)) {
-                        
-                        // Incrementa o contador de sucata
-                        scrap_count++;
-
-                        // Remove a sucata coletada da lista
-                        if (prev_scrap) {
-                            prev_scrap->next = current_scrap->next;
-                            destroy_scrap(current_scrap);
-                            current_scrap = prev_scrap->next;
-                        } else {
-                            scrap_list = current_scrap->next;
-                            destroy_scrap(current_scrap);
-                            current_scrap = scrap_list;
-                        }
+            if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+                // Detectar a tecla "P" para alternar entre pausa e continuar
+                if (event.keyboard.keycode == ALLEGRO_KEY_P) {
+                    is_paused = !is_paused;  // Alterna o estado de pausa
+                    if (is_paused) {
+                        printf("Jogo pausado\n");
                     } else {
-                        prev_scrap = current_scrap;
-                        current_scrap = current_scrap->next;
+                        printf("Jogo retomado\n");
                     }
+                }
+                
+                // Detectar a tecla "B" para criar o boss
+                if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
+                    boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);  // Cria o boss no lado direito da tela, no meio verticalmente
+                    printf("Boss apareceu!\n");
+                }
+                
+                // Controle de movimento apenas se não estiver em pausa
+                if (!is_paused) {
+                    if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 1;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 1;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 1;  
+                    }
+                }
+            } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
+                if (!is_paused) {
+                    if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 0;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 0; 
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 0;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 0;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 0;  
+                    }
+                }
+            } else if (event.type == ALLEGRO_EVENT_TIMER) {
+                if (!is_paused) {
+                    frame_count++;
+
+                    // Aumenta a velocidade dos inimigos a cada 600 frames (~20 segundos se 30 FPS)
+                    if (frame_count % 600 == 0) {
+                        enemy_speed += SPEED_INCREMENT;
+                        if (enemy_speed > MAX_ENEMY_SPEED) {
+                            enemy_speed = MAX_ENEMY_SPEED;
+                        }
+                    }
+
+                    // Atualiza o Boss se ele estiver presente
+                    if (boss != NULL) {
+                        update_boss(boss);
+                    }
+
+                    // Atualiza os elementos do jogo
+                    update_position(player_1);
+                    update_bullets(player_1);
+                    update_enemies(&enemies, enemy_speed);
+                    update_shooter_enemy(&shooter_enemies);
+                    move_shooter_bullets(shooter_enemies, player_1);
+                    move_scrap(scrap_list, enemy_speed);
+
+                    // Verifica colisões
+                    check_collision_with_player(player_1, &enemies);
+                    check_kill(player_1, &enemies, score);
+                    check_kill_shooter_enemies(player_1, &shooter_enemies, score);
+                    check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
+                    
+                    // Verifica colisão do player com o boss
+                    if (boss != NULL) {
+                        check_boss_collision_with_player(player_1, boss);
+                    }
+
+                    healthbar_update(player_1_healthbar, player_1->hp);
+                    p1k = (player_1->hp <= 0) ? 1 : 0;
                 }
 
                 // Desenha todos os elementos
@@ -216,27 +187,23 @@ int main() {
                     }
                 }
 
+                // Desenha o boss se ele estiver presente
+                if (boss != NULL) {
+                    draw_boss(boss);
+                }
+
                 // Desenha a pontuação
                 score_draw(score);
 
-                if (player_1->gun->timer) player_1->gun->timer--;
+                if (player_1->gun->timer && !is_paused) player_1->gun->timer--;
+
+                // Se o jogo está pausado, exiba a mensagem de pausa
+                if (is_paused) {
+                    al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "JOGO PAUSADO");
+                    al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione 'P' para continuar");
+                }
 
                 al_flip_display();
-
-            } else if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
-                if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 1;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 1;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 1;  
-                }
-            } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
-                if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 0;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 0; 
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 0;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 0;  
-                } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 0;  
-                }
             } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                 break;
             }
@@ -244,6 +211,9 @@ int main() {
     }
 
     // Limpeza dos recursos alocados
+    if (boss != NULL) {
+        destroy_boss(boss);
+    }
     destroy_all_enemies(enemies);
     destroy_all_shooter_enemies(shooter_enemies);
     destroy_all_scrap(scrap_list);

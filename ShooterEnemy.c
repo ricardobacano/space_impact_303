@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include "ShooterEnemy.h"
 #include "BulletEnemy.h"
+#include <stdio.h>
 
-ShooterEnemy* create_shooter_enemy(float x, float y, unsigned char hp) {
+ShooterEnemy* create_shooter_enemy(float x, float y, int hp) {
     ShooterEnemy *new_enemy = (ShooterEnemy*) malloc(sizeof(ShooterEnemy));
     if (!new_enemy) return NULL;
     new_enemy->x = x;
@@ -24,41 +25,84 @@ void shooter_enemy_shoot(ShooterEnemy *enemy) {
 }
 
 unsigned char check_kill_shooter_enemies(square *player, ShooterEnemy **shooter_enemies, Score *score) {
-    ShooterEnemy *previous = NULL, *current = *shooter_enemies;
+    ShooterEnemy *previous = NULL;
+    ShooterEnemy *current = *shooter_enemies;
 
     while (current != NULL) {
         bullet *prev_bullet = NULL;
-        for (bullet *index = player->gun->shots; index != NULL; index = (bullet*)index->next) {
+        bullet *index = player->gun->shots;
+
+        // Verificar cada tiro do jogador
+        while (index != NULL) {
             if ((index->x >= current->x - 10) && (index->x <= current->x + 10) &&
                 (index->y >= current->y - 10) && (index->y <= current->y + 10)) {
-                current->hp -= index->damage;
-                if (current->hp <= 0) {
-                    score_increment(score, 20);  // Aumenta a pontuação por matar um ShooterEnemy
 
-                    // Remove o ShooterEnemy da lista
-                    if (previous) {
+
+                // Reduz o HP do inimigo
+                current->hp -= index->damage;
+
+
+                // Se o HP do inimigo for zero ou menor
+                if (current->hp <= 0) {
+                    score_increment(score, 20);  // Aumenta a pontuação
+
+
+                    // Remover o projétil do jogador que atingiu o inimigo
+                    if (prev_bullet != NULL) {
+                        prev_bullet->next = index->next;
+                    } else {
+                        player->gun->shots = index->next;
+                    }
+
+                    bullet *to_destroy_bullet = index;
+                    index = index->next;  // Avança o ponteiro antes de destruir o projétil
+                    bullet_destroy(to_destroy_bullet);
+
+                    // Remove o inimigo da lista
+                    if (previous != NULL) {
                         previous->next = current->next;
                     } else {
                         *shooter_enemies = current->next;
                     }
-                    destroy_shooter_enemy(current);
-                    return 1;
-                }
 
-                // Remove o projétil do jogador após o impacto
-                if (prev_bullet) {
-                    prev_bullet->next = index->next;
+                    // Armazene o próximo inimigo antes de destruir o atual
+                    ShooterEnemy *to_destroy_enemy = current;
+                    current = current->next;
+
+                    // Destruir o inimigo atual
+                    destroy_shooter_enemy(to_destroy_enemy);
+
+                    // Continue com o próximo inimigo
+                    break;  // Saia do loop de tiros e vá para o próximo inimigo
                 } else {
-                    player->gun->shots = (bullet*)index->next;
+                    // Se o inimigo não foi destruído, apenas remove o projétil
+                    if (prev_bullet != NULL) {
+                        prev_bullet->next = index->next;
+                    } else {
+                        player->gun->shots = index->next;
+                    }
+
+                    bullet *to_destroy_bullet = index;
+                    index = index->next;  // Avança o ponteiro antes de destruir o projétil
+                    bullet_destroy(to_destroy_bullet);
+
+                    // Continue verificando outros tiros no mesmo inimigo
+                    continue;
                 }
-                bullet_destroy(index);
-                return 0;
             }
+
+            // Avançar para o próximo tiro
             prev_bullet = index;
+            index = index->next;
         }
-        previous = current;
-        current = current->next;
+
+        // Atualizar o ponteiro previous e avançar para o próximo inimigo
+        if (current != NULL) {
+            previous = current;
+            current = current->next;
+        }
     }
+
     return 0;
 }
 
@@ -146,40 +190,67 @@ unsigned char check_collision_with_player_shooter_enemy(square *player, ShooterE
     ShooterEnemy *current = *shooter_enemies;
 
     while (current != NULL) {
-        // Verifica se há colisão entre o player e o shooter enemy
-        if ((player->x + player->side / 2 >= current->x - 10) && (player->x - player->side / 2 <= current->x + 10) &&
-            (player->y + player->side / 2 >= current->y - 10) && (player->y - player->side / 2 <= current->y + 10)) {
-            
-            // Reduz a vida do player em um valor fixo
-            player->hp -= 20;
+        // Cálculo da hitbox do jogador e do inimigo para verificar a colisão
+        float player_left = player->x - player->side / 2;
+        float player_right = player->x + player->side / 2;
+        float player_top = player->y - player->side / 2;
+        float player_bottom = player->y + player->side / 2;
 
-            // Remove o shooter enemy da lista, pois ele foi destruído
-            if (previous) {
-                previous->next = current->next;
+        float enemy_left = current->x - 10;  // Considerando o inimigo como 20 pixels de largura
+        float enemy_right = current->x + 10;
+        float enemy_top = current->y - 10;   // Considerando o inimigo como 20 pixels de altura
+        float enemy_bottom = current->y + 10;
+
+        // Adicione os prints aqui para ver a posição do jogador e do inimigo antes da verificação de colisão
+
+        // Verifica se as hitboxes se sobrepõem
+        if (player_right >= enemy_left && player_left <= enemy_right &&
+            player_bottom >= enemy_top && player_top <= enemy_bottom) {
+            
+            // Colisão detectada: reduz HP do jogador e destrói o inimigo
+            player->hp -= 20;  // Você pode ajustar esse valor conforme necessário
+
+            // Imprimir a nova quantidade de HP do player
+
+            // Armazene o próximo inimigo antes de destruir o atual
+            ShooterEnemy *next_enemy = current->next;
+
+            // Remover o inimigo da lista
+            if (previous != NULL) {
+                previous->next = next_enemy;
             } else {
-                *shooter_enemies = current->next;
+                *shooter_enemies = next_enemy;
             }
-            
+
+            // Destruir o inimigo atual
             destroy_shooter_enemy(current);
-            return 1; 
+
+            // Atualizar `current` para o próximo inimigo antes de continuar
+            current = next_enemy;
+
+            // Retornar 1 para indicar que uma colisão foi tratada e o inimigo foi removido
+            return 1;
+        } else {
+            // Se não houver colisão, apenas avançamos para o próximo inimigo
+            previous = current;
+            current = current->next;
         }
-
-        previous = current;
-        current = current->next;
-
-        return 0;
     }
+
+    return 0;
 }
 
 void destroy_shooter_enemy(ShooterEnemy *enemy) {
     if (enemy == NULL) return;
 
+    // Libere todos os projéteis disparados por esse inimigo
     bullet_enemy *current_bullet = enemy->shots;
     while (current_bullet != NULL) {
         bullet_enemy *next_bullet = current_bullet->next;
         bullet_enemy_destroy(current_bullet);
         current_bullet = next_bullet;
     }
+
     free(enemy);
 }
 
