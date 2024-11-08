@@ -13,6 +13,9 @@
 #include "Scrap.h"
 #include "Boss.h"
 #include "FPS.h"
+#include "Shield.h"
+#include "ShieldBar.h"
+#include "SelectionScreen.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -46,20 +49,21 @@ int main() {
     player_1->hp = 100;
 
     HealthBar *player_1_healthbar = healthbar_create(10, 10, player_1->hp);
+    Shield *player_shield = shield_create(); 
+    ShieldBar *player_1_shieldbar = shieldbar_create(10 + HEALTHBAR_WIDTH + 10, 10, player_shield->duration);
 
-    // Criação da pontuação
     Score *score = score_create();
     if (!score) return 2;
 
-    // Lista de inimigos comuns e inimigos que atiram
     Enemy *enemies = NULL;
     ShooterEnemy* shooter_enemies = NULL;
 
     Scrap *scrap_list = NULL;
     int scrap_count = 0; // Contador de sucata
 
-    // Variável para o boss
     Boss *boss = NULL;
+
+    SelectionScreen *selection_screen = selection_screen_create();
 
     ALLEGRO_EVENT event;
     al_start_timer(timer);
@@ -80,33 +84,38 @@ int main() {
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
         } else {
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
-                if (event.keyboard.keycode == ALLEGRO_KEY_2) {
-                    // Chama a função para alternar a velocidade do jogo
-                    toggle_game_speed(timer, &is_double_speed);
-                }
-                // Detectar a tecla "P" para alternar entre pausa e continuar
-                if (event.keyboard.keycode == ALLEGRO_KEY_P) {
-                    is_paused = !is_paused;  // Alterna o estado de pausa
-                    if (is_paused) {
-                        printf("Jogo pausado\n");
-                    } else {
-                        printf("Jogo retomado\n");
+                if (selection_screen->is_visible) {
+                    selection_screen_handle_input(selection_screen, &event);
+                    if (event.keyboard.keycode == ALLEGRO_KEY_Q) {
+                        selection_screen_hide(selection_screen);
+                        is_paused = false; // Retoma o jogo após a seleção
                     }
-                }
-                
-                // Detectar a tecla "B" para criar o boss
-                if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
-                    boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);  // Cria o boss no lado direito da tela, no meio verticalmente
-                    printf("Boss apareceu!\n");
-                }
-                
-                // Controle de movimento apenas se não estiver em pausa
-                if (!is_paused) {
-                    if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
-                    } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
-                    } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 1;  
-                    } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 1;  
-                    } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 1;  
+                } else {
+                    if (event.keyboard.keycode == ALLEGRO_KEY_2) {
+                        toggle_game_speed(timer, &is_double_speed);
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_P) {
+                        is_paused = !is_paused;
+                        if (is_paused) {
+                            printf("Jogo pausado\n");
+                        } else {
+                            printf("Jogo retomado\n");
+                        }
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);
+                        printf("Boss apareceu!\n");
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_E) {
+                        shield_activate(player_shield);
+                    }
+                    if (!is_paused) {
+                        if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 1;  
+                        }
                     }
                 }
             } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
@@ -122,7 +131,6 @@ int main() {
                 if (!is_paused) {
                     frame_count++;
 
-                    // Aumenta a velocidade dos inimigos a cada 600 frames (~20 segundos se 30 FPS)
                     if (frame_count % 600 == 0) {
                         enemy_speed += SPEED_INCREMENT;
                         if (enemy_speed > MAX_ENEMY_SPEED) {
@@ -131,16 +139,14 @@ int main() {
                     }
 
                     if (enemy_speed == MAX_ENEMY_SPEED && boss == NULL) {
-                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);  // Cria o boss no lado direito da tela, no meio verticalmente
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);
                         printf("Boss apareceu automaticamente!\n");
                     }
 
-                    // Gera novos inimigos comuns aleatoriamente
                     if (boss == NULL && rand() % 50 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = rand() % Y_SCREEN;
 
-                        // Verifica colisão com outros inimigos antes de criar um novo
                         if (!check_collision_with_enemies(new_x, new_y, enemies) &&
                             !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
                             Enemy *new_enemy = create_enemy(new_x, new_y, 10);
@@ -151,12 +157,10 @@ int main() {
                         }
                     }
 
-                    // Gera novos inimigos que atiram aleatoriamente
                     if (boss == NULL && rand() % 200 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = rand() % Y_SCREEN;
 
-                        // Verifica colisão com outros inimigos antes de criar um novo
                         if (!check_collision_with_enemies(new_x, new_y, enemies) &&
                             !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
                             ShooterEnemy *new_shooter = create_shooter_enemy(new_x, new_y, 15);
@@ -167,46 +171,49 @@ int main() {
                         }
                     }
 
-                    if (rand() % 500 == 0) {
-                    float new_x = X_SCREEN;
-                    float new_y = rand() % Y_SCREEN;
+                    if (rand() % 10 == 0) {
+                        float new_x = X_SCREEN;
+                        float new_y = rand() % Y_SCREEN;
 
-                    Scrap *new_scrap = create_scrap(new_x, new_y);
-                    if (new_scrap) {
-                        new_scrap->next = scrap_list;
-                        scrap_list = new_scrap;
+                        Scrap *new_scrap = create_scrap(new_x, new_y);
+                        if (new_scrap) {
+                            new_scrap->next = scrap_list;
+                            scrap_list = new_scrap;
                         }
                     }
 
-                    // Faz com que os inimigos azuis atirem a cada certo número de frames
+                    if (scrap_count >= 10) {
+                        scrap_count = 0;
+                        selection_screen_show(selection_screen);
+                        is_paused = true;
+                    }
+
                     ShooterEnemy *current_shooter = shooter_enemies;
                     while (current_shooter != NULL) {
-                        if (frame_count % 100 == 0) { // A cada 100 frames aproximadamente
+                        if (frame_count % 100 == 0) {
                             shooter_enemy_shoot(current_shooter);
                         }
                         current_shooter = current_shooter->next;
                     }
 
-                    // Atualiza o Boss se ele estiver presente
                     if (boss != NULL) {
                         update_boss(boss);
                     }
 
-                    // Atualiza os elementos do jogo
                     update_position(player_1);
                     update_bullets(player_1);
                     update_enemies(&enemies, enemy_speed);
                     update_shooter_enemy(&shooter_enemies);
                     move_shooter_bullets(shooter_enemies, player_1);
                     move_scrap(scrap_list, enemy_speed);
+                    shield_update(player_shield, al_get_time()); 
+                    shieldbar_update(player_1_shieldbar, player_shield->is_active ? player_shield->duration - (al_get_time() - player_shield->start_time) : 0);
 
-                    // Verifica colisões
                     check_collision_with_player(player_1, &enemies);
                     check_kill(player_1, &enemies, score);
                     check_kill_shooter_enemies(player_1, &shooter_enemies, score);
                     check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
-                    
-                    // Verifica colisão do player com o boss
+
                     if (boss != NULL) {
                         check_boss_collision_with_player(player_1, boss);
                     }
@@ -224,10 +231,8 @@ int main() {
                         (player_1->y + player_1->side / 2 >= current_scrap->y - 5) &&
                         (player_1->y - player_1->side / 2 <= current_scrap->y + 5)) {
                         
-                        // Incrementa o contador de sucata
                         scrap_count++;
 
-                        // Remove a sucata coletada da lista
                         if (prev_scrap) {
                             prev_scrap->next = current_scrap->next;
                             destroy_scrap(current_scrap);
@@ -242,34 +247,31 @@ int main() {
                         current_scrap = current_scrap->next;
                     }
                 }
-                // Desenha todos os elementos
-                al_clear_to_color(al_map_rgb(0, 0, 0));
-                
-                // Desenha a barra de vida
-                healthbar_draw(player_1_healthbar);
 
-                // Desenha o contador de sucata ao lado da barra de vida
+                al_clear_to_color(al_map_rgb(0, 0, 0));
+
+                selection_screen_draw(selection_screen, font);
+
+                healthbar_draw(player_1_healthbar);
+                shieldbar_draw(player_1_shieldbar);
+
                 char scrap_text[50];
                 snprintf(scrap_text, 50, "Sucata: %d", scrap_count);
-                al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);  // Texto abaixo da barra de vida
+                al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);
 
-                // Desenha o jogador
                 al_draw_filled_rectangle(player_1->x - player_1->side / 2, player_1->y - player_1->side / 2,
-                                        player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
-                                        al_map_rgb(255, 0, 0));
+                                         player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
+                                         al_map_rgb(255, 0, 0));
 
-                // Desenha os inimigos comuns
+                shield_draw(player_shield, player_1);
+
                 draw_enemies(enemies);
-
-                // Desenha as sucatas
                 draw_scrap(scrap_list);
 
-                // Desenha os tiros do jogador
                 for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
                     al_draw_filled_circle(index->x, index->y, 2, al_map_rgb(255, 0, 0));
                 }
 
-                // Desenha os inimigos que atiram e seus tiros
                 for (ShooterEnemy *shooter = shooter_enemies; shooter != NULL; shooter = shooter->next) {
                     al_draw_filled_rectangle(shooter->x - 10, shooter->y - 10, shooter->x + 10, shooter->y + 10, al_map_rgb(0, 0, 255));
                     for (bullet_enemy *index = shooter->shots; index != NULL; index = index->next) {
@@ -277,30 +279,30 @@ int main() {
                     }
                 }
 
-                // Desenha o boss se ele estiver presente
                 if (boss != NULL) {
                     draw_boss(boss);
                 }
 
-                // Desenha a pontuação
+                if (selection_screen->is_visible) {
+                    selection_screen_handle_input(selection_screen, &event);
+                }
+
                 score_draw(score);
 
                 if (player_1->gun->timer && !is_paused) player_1->gun->timer--;
 
-                // Se o jogo está pausado, exiba a mensagem de pausa
                 if (is_paused) {
                     al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "JOGO PAUSADO");
                     al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione 'P' para continuar");
                 }
 
                 al_flip_display();
-            }else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+            } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                 break;
             }
         }
     }
 
-    // Limpeza dos recursos alocados
     if (boss != NULL) {
         destroy_boss(boss);
     }
@@ -314,6 +316,7 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
     square_destroy(player_1);
+    selection_screen_destroy(selection_screen);
 
     return 0;
 }
