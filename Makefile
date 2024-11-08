@@ -1,6 +1,6 @@
 # Definições de compilador e flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror -pedantic -std=c99 -O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined $(shell pkg-config --cflags allegro-5 allegro_font-5 allegro_primitives-5)
+CFLAGS = -Wall $(shell pkg-config --cflags allegro-5 allegro_font-5 allegro_primitives-5)
 LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_font-5 allegro_primitives-5)
 
 # Utiliza wildcard para encontrar todos os arquivos .c na pasta atual
