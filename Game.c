@@ -88,7 +88,11 @@ int main() {
                     selection_screen_handle_input(selection_screen, &event);
                     if (event.keyboard.keycode == ALLEGRO_KEY_Q) {
                         selection_screen_hide(selection_screen);
-                        is_paused = false; // Retoma o jogo após a seleção
+                        is_paused = false;
+                        player_1->control->left = 0;
+                        player_1->control->right = 0;
+                        player_1->control->up = 0;
+                        player_1->control->down = 0;
                     }
                 } else {
                     if (event.keyboard.keycode == ALLEGRO_KEY_2) {
@@ -291,8 +295,8 @@ int main() {
 
                 if (player_1->gun->timer && !is_paused) player_1->gun->timer--;
 
-                if (is_paused) {
-                    al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "JOGO PAUSADO");
+                if (is_paused && scrap_count != 10) {
+                     al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "JOGO PAUSADO");
                     al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione 'P' para continuar");
                 }
 
