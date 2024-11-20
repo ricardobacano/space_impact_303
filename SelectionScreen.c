@@ -7,9 +7,19 @@ SelectionScreen* selection_screen_create() {
 
     new_screen->selected_option = 0;  // Inicialmente, a primeira opção é selecionada
     new_screen->is_visible = false;   // Tela começa invisível
+    new_screen->background_bitmap = al_create_bitmap(800, 600); // Cria um bitmap preto
+    if (!new_screen->background_bitmap) {
+        free(new_screen);
+        return NULL;
+    }
+
+    al_set_target_bitmap(new_screen->background_bitmap);
+    al_clear_to_color(al_map_rgb(0, 0, 0));  // Preenche o bitmap com preto
+    al_set_target_backbuffer(al_get_current_display()); // Volta ao backbuffer
 
     return new_screen;
 }
+
 
 void selection_screen_show(SelectionScreen *screen) {
     screen->is_visible = true;
@@ -18,7 +28,10 @@ void selection_screen_show(SelectionScreen *screen) {
 void selection_screen_draw(SelectionScreen *screen, ALLEGRO_FONT *font) {
     if (!screen->is_visible) return;
 
-    // Desenha a tela de fundo translúcida
+    // Preenche todo o fundo com preto
+    al_draw_filled_rectangle(0, 0, X_SCREEN, Y_SCREEN, al_map_rgb(0, 0, 0));
+
+    // (Opcional) Desenha uma sobreposição translúcida para destacar o menu
     al_draw_filled_rectangle(100, 100, 700, 500, al_map_rgba(0, 0, 0, 150));
 
     // Opções do menu
@@ -51,5 +64,8 @@ void selection_screen_hide(SelectionScreen *screen) {
 }
 
 void selection_screen_destroy(SelectionScreen *screen) {
+    if (screen->background_bitmap) {
+        al_destroy_bitmap(screen->background_bitmap);
+    }
     free(screen);
 }

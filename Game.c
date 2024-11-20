@@ -175,7 +175,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 10 == 0) {
+                    if (rand() % 500 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = rand() % Y_SCREEN;
 
@@ -257,17 +257,21 @@ int main() {
                 selection_screen_draw(selection_screen, font);
 
                 healthbar_draw(player_1_healthbar);
-                shieldbar_draw(player_1_shieldbar);
+                shield_draw(player_shield, player_1);
+                shield_draw_bar(player_shield, font, 120, 10, 200, 20);
 
+                
                 char scrap_text[50];
                 snprintf(scrap_text, 50, "Sucata: %d", scrap_count);
                 al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);
+
+                draw_shield_timer(player_shield, font, 330, 15);
 
                 al_draw_filled_rectangle(player_1->x - player_1->side / 2, player_1->y - player_1->side / 2,
                                          player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
                                          al_map_rgb(255, 0, 0));
 
-                shield_draw(player_shield, player_1);
+
 
                 draw_enemies(enemies);
                 draw_scrap(scrap_list);
@@ -288,6 +292,8 @@ int main() {
                 }
 
                 if (selection_screen->is_visible) {
+                    al_clear_to_color(al_map_rgb(0, 0, 0)); // Garante que o fundo inicial seja preto
+                    selection_screen_draw(selection_screen, font);
                     selection_screen_handle_input(selection_screen, &event);
                 }
 

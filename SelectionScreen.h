@@ -8,11 +8,14 @@
 #include <stdbool.h>
 
 #define NUM_OPTIONS 3
+#define X_SCREEN 800
+#define Y_SCREEN 600
 
 // Estrutura para representar a tela de seleção
 typedef struct {
     int selected_option;
     bool is_visible;
+    ALLEGRO_BITMAP *background_bitmap;  
 } SelectionScreen;
 
 // Funções para a tela de seleção
