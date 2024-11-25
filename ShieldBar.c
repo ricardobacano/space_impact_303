@@ -2,16 +2,16 @@
 #include <stdlib.h>
 #include "ShieldBar.h"
 
-#define SHIELDBAR_WIDTH 100
-#define SHIELDBAR_HEIGHT 10
-#define SHIELDBAR_COLOR al_map_rgb(0, 0, 255) // Cor azul para a barra de escudo
+// Cor azul para a barra de escudo
+#define HEALTHBAR_HEIGHT 10.0
 
 ShieldBar* shieldbar_create(float x, float y, unsigned char max_shield) {
     ShieldBar *new_bar = (ShieldBar*) malloc(sizeof(ShieldBar));
     if (!new_bar) return NULL;
 
+    // Ajustar a posição 'y' para ficar abaixo da barra de vida
     new_bar->x = x;
-    new_bar->y = y;
+    new_bar->y = y + HEALTHBAR_HEIGHT + 5; // 5 é um espaçamento adicional opcional entre as barras
     new_bar->max_shield = max_shield;
     new_bar->current_shield = max_shield;
 

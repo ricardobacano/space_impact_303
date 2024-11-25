@@ -24,9 +24,11 @@ void healthbar_draw(HealthBar *bar) {
     float hp_ratio = (float) bar->current_hp / bar->max_hp;
     float current_width = HEALTHBAR_WIDTH * hp_ratio;
 
+    // Desenha o contorno da barra de vida
     al_draw_rectangle(bar->x, bar->y, bar->x + HEALTHBAR_WIDTH, bar->y + HEALTHBAR_HEIGHT, al_map_rgb(255, 255, 255), 1);
 
-    al_draw_filled_rectangle(bar->x, bar->y, bar->x + current_width, bar->y + HEALTHBAR_HEIGHT, al_map_rgb(0, 255, 0));
+    // Desenha a parte preenchida da barra de vida
+    al_draw_filled_rectangle(bar->x, bar->y, bar->x + current_width, bar->y + HEALTHBAR_HEIGHT, HEALTHBAR_COLOR);
 }
 
 void healthbar_destroy(HealthBar *bar) {

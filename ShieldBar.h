@@ -3,6 +3,10 @@
 
 #include <allegro5/allegro.h>
 
+#define SHIELDBAR_WIDTH 100
+#define SHIELDBAR_HEIGHT 10
+#define SHIELDBAR_COLOR al_map_rgb(0, 0, 255) 
+
 typedef struct {
     float x;
     float y;

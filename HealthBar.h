@@ -1,8 +1,9 @@
 #ifndef __HEALTHBAR__  
 #define __HEALTHBAR__  
 
-#define HEALTHBAR_WIDTH 100.0
-#define HEALTHBAR_HEIGHT 10.0
+#define HEALTHBAR_WIDTH 100
+#define HEALTHBAR_HEIGHT 10
+#define HEALTHBAR_COLOR al_map_rgb(0, 255, 0) // Cor verde para a barra de vida
 
 typedef struct {
     float x;  

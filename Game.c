@@ -17,6 +17,7 @@
 #include "Shield.h"
 #include "ShieldBar.h"
 #include "SelectionScreen.h"
+#include "BackGround.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -33,6 +34,7 @@ int main() {
     al_install_keyboard();
     al_init_ttf_addon();
     al_init_font_addon();
+    al_init_image_addon(); 
 
     srand(time(NULL));  // Semente para valores aleatórios baseada no tempo
 
@@ -51,6 +53,7 @@ int main() {
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
 
+    background_init("./imagens/fundo_space.png");
     display_start_screen(disp, queue, font);
 
     square* player_1 = square_create(20, 1, 10, Y_SCREEN / 2, X_SCREEN, Y_SCREEN);
@@ -82,7 +85,6 @@ int main() {
 
     while (1) {
         al_wait_for_event(queue, &event);
-
         if (p1k) {
             // Tela de game over
             al_clear_to_color(al_map_rgb(0, 0, 0));
@@ -106,6 +108,7 @@ int main() {
                 } else {
                     if (event.keyboard.keycode == ALLEGRO_KEY_2) {
                         toggle_game_speed(timer, &is_double_speed);
+                        background_update(2.0);
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_P) {
                         is_paused = !is_paused;
@@ -143,6 +146,8 @@ int main() {
             } else if (event.type == ALLEGRO_EVENT_TIMER) {
                 if (!is_paused) {
                     frame_count++;
+
+                    background_update(enemy_speed / 2.0);  
 
                     if (frame_count % 600 == 0) {
                         enemy_speed += SPEED_INCREMENT;
@@ -264,7 +269,7 @@ int main() {
                 al_clear_to_color(al_map_rgb(0, 0, 0));
 
                 selection_screen_draw(selection_screen, font);
-
+                background_draw();
                 healthbar_draw(player_1_healthbar);
                 shield_draw(player_shield, player_1);
                 shield_draw_bar(player_shield, font, 120, 10, 200, 20);
@@ -325,6 +330,8 @@ int main() {
     if (boss != NULL) {
         destroy_boss(boss);
     }
+
+    background_destroy();
     destroy_all_enemies(enemies);
     destroy_all_shooter_enemies(shooter_enemies);
     destroy_all_scrap(scrap_list);
