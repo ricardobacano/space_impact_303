@@ -1,6 +1,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_ttf.h> 
 #include <time.h>
 #include <stdio.h>
 
@@ -30,12 +31,20 @@ int main() {
     al_init();
     al_init_primitives_addon();
     al_install_keyboard();
+    al_init_ttf_addon();
+    al_init_font_addon();
 
     srand(time(NULL));  // Semente para valores aleatórios baseada no tempo
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
-    ALLEGRO_FONT* font = al_create_builtin_font();
+
+    ALLEGRO_FONT* font = al_load_font("./imagens/fontes.ttf",15,5);
+    if (!font) {
+        fprintf(stderr, "Falha ao carregar a fonte! Verifique o caminho e a existência do arquivo.\n");
+        return -1;
+    } 
+
     ALLEGRO_DISPLAY* disp = al_create_display(X_SCREEN, Y_SCREEN);
 
     al_register_event_source(queue, al_get_keyboard_event_source());
