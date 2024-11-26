@@ -2,6 +2,11 @@
 #define SHIELDBAR_H
 
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro5.h>
+#include <allegro5/allegro_font.h>
+
+#include "Shield.h"
 
 #define SHIELDBAR_WIDTH 100
 #define SHIELDBAR_HEIGHT 10
@@ -19,5 +24,6 @@ ShieldBar* shieldbar_create(float x, float y, unsigned char max_shield);
 void shieldbar_update(ShieldBar *bar, unsigned char current_shield);
 void shieldbar_draw(ShieldBar *bar);
 void shieldbar_destroy(ShieldBar *bar);
+void draw_shield_timer(Shield *shield, ALLEGRO_FONT *font, float x, float y);
 
 #endif // SHIELDBAR_H

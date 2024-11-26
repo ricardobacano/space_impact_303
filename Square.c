@@ -18,8 +18,25 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
     new_square->control = joystick_create();
     new_square->gun = pistol_create();
 
+    // Aloca e inicializa o escudo
+    new_square->shield = (Shield*) malloc(sizeof(Shield));
+    if (!new_square->shield) {
+        free(new_square->control);
+        free(new_square->gun);
+        free(new_square);
+        return NULL;
+    }
+
+    new_square->shield->is_active = false;
+    new_square->shield->hp = 100.0f;  // HP inicial do escudo
+    new_square->shield->max_hp = 100.0f;
+    new_square->shield->cooldown = SHIELD_COOLDOWN;
+    new_square->shield->duration = 5.0f;
+    new_square->shield->last_used_time = -SHIELD_COOLDOWN;
+
     return new_square;
 }
+
 
 void square_move(square *element, char steps, unsigned char trajectory, unsigned short max_x, unsigned short max_y) {
     if (!trajectory) {
@@ -45,13 +62,36 @@ void square_shot(square *element) {
 }
 
 void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image) {
-    al_draw_bitmap(spaceship_image, player->x - player->side / 2, player->y - player->side / 2, 0);
+    if (!player || !spaceship_image) return;
+
+    float scale_y = 1.0;  // Escala padrão
+    if (player->control->up) {
+        scale_y = 0.9;  // Diminuir altura ao subir
+    } else if (player->control->down) {
+        scale_y = 1.1;  // Aumentar altura ao descer
+    }
+
+    // Desenho com escala
+    al_draw_scaled_bitmap(
+        spaceship_image,
+        0, 0,                                     
+        al_get_bitmap_width(spaceship_image),     // Largura do bitmap
+        al_get_bitmap_height(spaceship_image),    // Altura do bitmap
+        player->x - (player->side / 2),           // Posição X (centralizada)
+        player->y - (player->side / 2 * scale_y), // Posição Y (ajustada pela escala)
+        player->side,                             // Nova largura
+        player->side * scale_y,                   // Nova altura (ajustada pela escala)
+        0                                         // Sem flags adicionais
+    );
 }
 
 void square_destroy(square *element) {
-    pistol_destroy(element->gun);
-    joystick_destroy(element->control);
-    free(element);
+    if (element) {
+        if (element->control) joystick_destroy(element->control);
+        if (element->gun) pistol_destroy(element->gun);
+        if (element->shield) free(element->shield);
+        free(element);
+    }
 }
 
 void update_position(square *player) {

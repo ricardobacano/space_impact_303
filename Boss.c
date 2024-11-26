@@ -5,7 +5,7 @@
 #include "Boss.h"
 #include "Bullet.h"
 
-Boss* create_boss(float x, float y) {
+Boss* create_boss(float x, float y, ALLEGRO_BITMAP *sprite) {
     Boss *new_boss = (Boss*) malloc(sizeof(Boss));
     if (!new_boss) return NULL;
 
@@ -18,6 +18,7 @@ Boss* create_boss(float x, float y) {
 
     // Cria a barra de vida fixa no topo da tela
     new_boss->health_bar = healthbar_create(X_SCREEN - 130, 20, new_boss->hp);  // Coloca a barra no topo e define o valor máximo de HP
+    new_boss->sprite = sprite; 
 
     return new_boss;
 }
@@ -89,20 +90,18 @@ void update_boss(Boss *boss) {
 
 // Desenhar o Boss na tela
 void draw_boss(Boss *boss) {
-    if (boss == NULL) return;
+    if (!boss || !boss->sprite) return;
 
-    // Desenha o boss como um grande retângulo
-    al_draw_filled_rectangle(boss->x - BOSS_WIDTH / 2, boss->y - BOSS_HEIGHT / 2,
-                             boss->x + BOSS_WIDTH / 2, boss->y + BOSS_HEIGHT / 2,
-                             al_map_rgb(255, 0, 255));  // Cor roxa para o boss
+    // Desenha o sprite centralizado na posição do boss
+    al_draw_bitmap(
+        boss->sprite,
+        boss->x - al_get_bitmap_width(boss->sprite) / 2,  // Centraliza em X
+        boss->y - al_get_bitmap_height(boss->sprite) / 2, // Centraliza em Y
+        0                                                // Sem flags adicionais
+    );
 
-    // Desenha a barra de vida do boss no topo da tela
+    // Desenha a barra de vida do boss
     healthbar_draw(boss->health_bar);
-
-    // Desenha os tiros do boss
-    for (bullet *index = boss->shots; index != NULL; index = index->next) {
-        al_draw_filled_circle(index->x, index->y, 3, al_map_rgb(255, 0, 0));  // Cor vermelha para os tiros
-    }
 }
 
 // Função para destruir o Boss e liberar a memória alocada

@@ -1,5 +1,5 @@
-#include <allegro5/allegro_primitives.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "ShieldBar.h"
 
 // Cor azul para a barra de escudo
@@ -37,4 +37,32 @@ void shieldbar_draw(ShieldBar *bar) {
 
 void shieldbar_destroy(ShieldBar *bar) {
     free(bar);
+}
+
+void draw_shield_timer(Shield *shield, ALLEGRO_FONT *font, float x, float y) {
+    if (!shield || !font) return;
+
+    if (shield->is_active) {
+        // Calcula o tempo restante do escudo
+        float shield_time_remaining = shield->duration - (al_get_time() - shield->start_time);
+
+        if (shield_time_remaining > 0) {
+            char timer_text[50];
+            snprintf(timer_text, 50, "Escudo ativo: %.1fs", shield_time_remaining);
+
+            // Desenha o texto do timer na posição especificada
+            al_draw_text(font, al_map_rgb(255, 255, 255), x, y, ALLEGRO_ALIGN_LEFT, timer_text);
+        }
+    } else {
+        // Exibe o tempo de cooldown restante, se aplicável
+        float cooldown_time_remaining = shield->cooldown - (al_get_time() - shield->last_used_time);
+
+        if (cooldown_time_remaining > 0) {
+            char cooldown_text[50];
+            snprintf(cooldown_text, 50, "Cooldown: %.1fs", cooldown_time_remaining);
+
+            // Desenha o texto do cooldown na posição especificada
+            al_draw_text(font, al_map_rgb(255, 0, 0), x, y, ALLEGRO_ALIGN_LEFT, cooldown_text);
+        }
+    }
 }

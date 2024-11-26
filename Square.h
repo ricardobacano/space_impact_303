@@ -3,6 +3,8 @@
 
 #include "Joystick.h"
 #include "Pistol.h"
+#include "Shield.h"
+#include "ShieldBar.h"
 
 #define SQUARE_STEP 10
 #define X_SCREEN 800
@@ -16,6 +18,7 @@ typedef struct {
     unsigned short y;
     joystick *control;
     pistol *gun;
+    Shield *shield;      
 } square;
 
 square* square_create(unsigned char side, unsigned char face, unsigned short x, unsigned short y, unsigned short max_x, unsigned short max_y);

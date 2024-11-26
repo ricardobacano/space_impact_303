@@ -23,5 +23,7 @@ void bullet_move(bullet *elements) {
 }
 
 void bullet_destroy(bullet *element) {  
-    free(element);  
+    if (element != NULL) {
+        free(element);  
+    }
 }

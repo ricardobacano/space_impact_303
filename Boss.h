@@ -19,10 +19,11 @@ typedef struct Boss {
     unsigned int cooldown;   // Tempo de espera entre fases de disparo
     bullet *shots;           // Lista encadeada de tiros do boss
     HealthBar *health_bar;   // Barra de vida do boss
+    ALLEGRO_BITMAP *sprite;      // Adicione um ponteiro para o sprite
 } Boss;
 
-// Funções para manipular o Boss
-Boss* create_boss(float x, float y);
+// Funções para mcreate_bossanipular o Boss
+Boss* create_boss(float x, float y, ALLEGRO_BITMAP *sprite);
 void boss_shoot(Boss *boss);
 void update_boss(Boss *boss);
 void destroy_boss(Boss *boss);

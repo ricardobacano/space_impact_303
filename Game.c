@@ -20,12 +20,14 @@
 #include "ShieldBar.h"
 #include "SelectionScreen.h"
 #include "BackGround.h"
+#include "Explosion.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
 #define INITIAL_ENEMY_SPEED 2.0f  
 #define MAX_ENEMY_SPEED 10.0f     
-#define SPEED_INCREMENT 0.5f      
+#define SPEED_INCREMENT 0.5f    
+#define SPAWN_MARGIN 50 
 
 float enemy_speed = INITIAL_ENEMY_SPEED;
 int frame_count = 0;
@@ -89,6 +91,17 @@ int main() {
         return -1;
     }
 
+    ALLEGRO_BITMAP *explosion_sprite = al_load_bitmap("./imagens/explosion.png");
+    if (!explosion_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite da explosão.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("./imagens/boss_limpo.png");
+    if (!boss_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
+        return -1; // Saia do programa se o sprite não puder ser carregado
+    }
 
     ALLEGRO_DISPLAY* disp = al_create_display(X_SCREEN, Y_SCREEN);
 
@@ -104,8 +117,7 @@ int main() {
     player_1->hp = 100;
 
     HealthBar *player_1_healthbar = healthbar_create(10, 10, player_1->hp);
-    Shield *player_shield = shield_create(); 
-    ShieldBar *player_1_shieldbar = shieldbar_create(10 + HEALTHBAR_WIDTH + 10, 10, player_shield->duration);
+    ShieldBar *player_1_shieldbar = shieldbar_create(10 + HEALTHBAR_WIDTH + 10, 10, player_1->shield->duration);
 
     Score *score = score_create();
     if (!score) return 2;
@@ -114,9 +126,11 @@ int main() {
     ShooterEnemy* shooter_enemies = NULL;
 
     Scrap *scrap_list = NULL;
-    int scrap_count = 0; // Contador de sucata
+    int scrap_count = 0; 
 
     Boss *boss = NULL;
+
+    Explosion *explosions = NULL;
 
     SelectionScreen *selection_screen = selection_screen_create();
 
@@ -125,6 +139,7 @@ int main() {
     unsigned char p1k = 0;
     bool is_paused = false;  // Variável para controlar se o jogo está em pausa
     bool is_double_speed = false;  
+    bool debug_mode = false;
 
     while (1) {
         al_wait_for_event(queue, &event);
@@ -162,12 +177,17 @@ int main() {
                         }
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
-                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
                         printf("Boss apareceu!\n");
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_E) {
-                        shield_activate(player_shield);
+                        shield_activate(player_1->shield);
                     }
+
+                    if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_H) {
+                        debug_mode = !debug_mode;  
+                    }
+
                     if (!is_paused) {
                         if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
                         } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
@@ -200,17 +220,17 @@ int main() {
                     }
 
                     if (enemy_speed == MAX_ENEMY_SPEED && boss == NULL) {
-                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2);
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
                         printf("Boss apareceu automaticamente!\n");
                     }
 
                     if (boss == NULL && rand() % 50 == 0) {
                         float new_x = X_SCREEN;
-                        float new_y = rand() % Y_SCREEN;
+                        float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN); 
 
                         if (!check_collision_with_enemies(new_x, new_y, enemies) &&
                             !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
-                            Enemy *new_enemy = create_enemy(new_x, new_y, 10);
+                            Enemy *new_enemy = create_enemy(new_x, new_y, 35.0f, 35.0f, 20); 
                             if (new_enemy) {
                                 new_enemy->next = enemies;
                                 enemies = new_enemy;
@@ -218,23 +238,23 @@ int main() {
                         }
                     }
 
-                    if (boss == NULL && rand() % 200 == 0) {
-                        float new_x = X_SCREEN;
-                        float new_y = rand() % Y_SCREEN;
+                    if (rand() % 200 == 0) {  // Chance de criar um inimigo atirador
+                    float new_x = X_SCREEN;
+                    float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);  
 
-                        if (!check_collision_with_enemies(new_x, new_y, enemies) &&
-                            !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
-                            ShooterEnemy *new_shooter = create_shooter_enemy(new_x, new_y, 15);
-                            if (new_shooter) {
-                                new_shooter->next = shooter_enemies;
-                                shooter_enemies = new_shooter;
+                    // Verifica se não colide com outros inimigos
+                    if (!check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
+                        ShooterEnemy *new_enemy = create_shooter_enemy(new_x, new_y, 30);  
+                        if (new_enemy) {
+                            new_enemy->next = shooter_enemies;
+                            shooter_enemies = new_enemy;
                             }
                         }
                     }
 
                     if (rand() % 500 == 0) {
                         float new_x = X_SCREEN;
-                        float new_y = rand() % Y_SCREEN;
+                        float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
                         Scrap *new_scrap = create_scrap(new_x, new_y);
                         if (new_scrap) {
@@ -261,18 +281,22 @@ int main() {
                         update_boss(boss);
                     }
 
+                    float delta_time = 5.0 / 30.0;
+
                     update_position(player_1);
                     update_bullets(player_1);
                     update_enemies(&enemies, enemy_speed);
                     update_shooter_enemy(&shooter_enemies);
+                    update_explosions(&explosions, delta_time);
+
                     move_shooter_bullets(shooter_enemies, player_1);
                     move_scrap(scrap_list, enemy_speed);
-                    shield_update(player_shield, al_get_time()); 
-                    shieldbar_update(player_1_shieldbar, player_shield->is_active ? player_shield->duration - (al_get_time() - player_shield->start_time) : 0);
+                    shield_update(player_1->shield, al_get_time());
+                    shieldbar_update(player_1_shieldbar, player_1->shield->is_active ? player_1->shield->duration - (al_get_time() - player_1->shield->start_time) : 0);
 
                     check_collision_with_player(player_1, &enemies);
-                    check_kill(player_1, &enemies, score);
-                    check_kill_shooter_enemies(player_1, &shooter_enemies, score);
+                    check_kill(player_1, &enemies, score, &explosions);
+                    check_kill_shooter_enemies(player_1, &shooter_enemies, score, &explosions);
                     check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
 
                     if (boss != NULL) {
@@ -314,21 +338,23 @@ int main() {
                 selection_screen_draw(selection_screen, font);
                 background_draw();
                 healthbar_draw(player_1_healthbar);
-                shield_draw(player_shield, player_1);
-                shield_draw_bar(player_shield, font, 120, 10, 200, 20);
+                shield_draw(player_1->shield, player_1->x, player_1->y, player_1->side / 2);
+                shield_draw_bar(player_1->shield, font, 120, 10, 200, 20);
 
                 
                 char scrap_text[50];
                 snprintf(scrap_text, 50, "Sucata: %d", scrap_count);
                 al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);
 
-                draw_shield_timer(player_shield, font, 330, 15);
+                draw_shield_timer(player_1->shield, font, 330, 15);
 
                 square_draw(player_1, spaceship_image);
 
-                draw_enemies(enemies, enemy_sprite);
+                draw_enemies(enemies, enemy_sprite, debug_mode);
 
                 draw_scrap(scrap_list, scrap_sprite);
+
+                draw_explosions(explosions, explosion_sprite);
 
                 for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
                     // Centraliza o sprite do projétil na posição do projétil
@@ -336,16 +362,14 @@ int main() {
                                 index->y - al_get_bitmap_height(bullet_sprite) / 2, 0);
                 }
 
+                draw_shooter_enemies(shooter_enemies, shooter_enemy_sprite, debug_mode);
 
-                for (ShooterEnemy *shooter = shooter_enemies; shooter != NULL; shooter = shooter->next) {
-                    // Desenha o sprite do inimigo atirador
-                    al_draw_bitmap(shooter_enemy_sprite, shooter->x - al_get_bitmap_width(shooter_enemy_sprite) / 2,
-                                shooter->y - al_get_bitmap_height(shooter_enemy_sprite) / 2, 0);
-
-                    // Desenha os projéteis disparados pelo inimigo atirador
-                    for (bullet_enemy *index = shooter->shots; index != NULL; index = index->next) {
-                        al_draw_bitmap(shooter_bullet_sprite, index->x - al_get_bitmap_width(shooter_bullet_sprite) / 2,
-                                    index->y - al_get_bitmap_height(shooter_bullet_sprite) / 2, 0);
+                for (ShooterEnemy *current = shooter_enemies; current != NULL; current = current->next) {
+                    for (bullet_enemy *bullet = current->shots; bullet != NULL; bullet = bullet->next) {
+                        al_draw_bitmap(shooter_bullet_sprite,
+                                    bullet->x - al_get_bitmap_width(shooter_bullet_sprite) / 2,
+                                    bullet->y - al_get_bitmap_height(shooter_bullet_sprite) / 2,
+                                    0);
                     }
                 }
 
@@ -383,6 +407,11 @@ int main() {
     background_destroy();
     destroy_all_enemies(enemies);
     destroy_all_shooter_enemies(shooter_enemies);
+    if (shooter_enemy_sprite) 
+        al_destroy_bitmap(shooter_enemy_sprite);
+    if (shooter_bullet_sprite) 
+        al_destroy_bitmap(shooter_bullet_sprite);
+
     destroy_all_scrap(scrap_list);
     healthbar_destroy(player_1_healthbar);
     score_destroy(score);
@@ -391,12 +420,11 @@ int main() {
     al_destroy_bitmap(scrap_sprite);
     al_destroy_bitmap(enemy_sprite);
     al_destroy_bitmap(shooter_enemy_sprite);
-    al_destroy_bitmap(bullet_sprite);
-    al_destroy_bitmap(shooter_bullet_sprite);
     al_destroy_timer(timer);
     al_destroy_bitmap(spaceship_image);
     al_destroy_event_queue(queue);
     square_destroy(player_1);
+    al_destroy_bitmap(boss_sprite);
     selection_screen_destroy(selection_screen);
 
     return 0;
