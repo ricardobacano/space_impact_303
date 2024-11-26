@@ -42,7 +42,7 @@ void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, 
     float y_pos = (display_height - background_height) / 2 - 50;
 
     // (r,g,b) value is (45,35,40)
-    al_clear_to_color(al_map_rgb(45, 35, 40));
+    al_clear_to_color(al_map_rgb(29, 36, 99));
     al_draw_bitmap(background, x_pos, y_pos, 0);
 
     al_draw_text(font, al_map_rgb(255, 255, 255), display_width / 2,

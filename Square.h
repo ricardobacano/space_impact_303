@@ -22,7 +22,7 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
 void square_move(square *element, char steps, unsigned char trajectory, unsigned short max_x, unsigned short max_y);
 void square_shot(square *element);
 void square_destroy(square *element);
-
+void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image);
 void update_position(square *player);
 void update_bullets(square *player);
 

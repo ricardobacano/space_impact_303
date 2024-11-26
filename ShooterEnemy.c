@@ -24,6 +24,14 @@ void shooter_enemy_shoot(ShooterEnemy *enemy) {
     }
 }
 
+void draw_shooter_enemies(ShooterEnemy *head, ALLEGRO_BITMAP* shooter_enemy_sprite) {
+    for (ShooterEnemy *current = head; current != NULL; current = current->next) {
+        // Ajuste a posição para centralizar o sprite
+        al_draw_bitmap(shooter_enemy_sprite, current->x - 10, current->y - 10, 0);
+    }
+}
+
+
 unsigned char check_kill_shooter_enemies(square *player, ShooterEnemy **shooter_enemies, Score *score) {
     ShooterEnemy *previous = NULL;
     ShooterEnemy *current = *shooter_enemies;

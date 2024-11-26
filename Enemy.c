@@ -45,11 +45,12 @@ void update_enemies(Enemy **enemies, float speed) {
     }
 }
 
-void draw_enemies(Enemy *head) {
+void draw_enemies(Enemy *head, ALLEGRO_BITMAP* enemy_sprite) {
     for (Enemy *current = head; current != NULL; current = current->next) {
-        al_draw_filled_rectangle(current->x - 10, current->y - 10, current->x + 10, current->y + 10, al_map_rgb(0, 255, 0));
+        al_draw_bitmap(enemy_sprite, current->x - 10, current->y - 10, 0);
     }
 }
+
 
 void destroy_enemy(Enemy *enemy) {
     free(enemy);

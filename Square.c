@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <allegro5/allegro.h>
+
 #include "Square.h"
 
 square* square_create(unsigned char side, unsigned char face, unsigned short x, unsigned short y, unsigned short max_x, unsigned short max_y) {
@@ -8,7 +10,7 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
     square *new_square = (square*) malloc(sizeof(square));
     if (!new_square) return NULL;
 
-    new_square->side = side;
+    new_square->side = 55;
     new_square->face = face;
     new_square->hp = 5;
     new_square->x = x;
@@ -40,6 +42,10 @@ void square_shot(square *element) {
     if (!element->face) shot = pistol_shot(element->x - element->side / 2, element->y, element->face, element->gun);
     else if (element->face == 1) shot = pistol_shot(element->x + element->side / 2, element->y, element->face, element->gun);
     if (shot) element->gun->shots = shot;
+}
+
+void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image) {
+    al_draw_bitmap(spaceship_image, player->x - player->side / 2, player->y - player->side / 2, 0);
 }
 
 void square_destroy(square *element) {

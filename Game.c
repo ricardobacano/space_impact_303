@@ -1,7 +1,9 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_ttf.h> 
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #include <time.h>
 #include <stdio.h>
 
@@ -43,9 +45,50 @@ int main() {
 
     ALLEGRO_FONT* font = al_load_font("./imagens/fontes.ttf",15,5);
     if (!font) {
-        fprintf(stderr, "Falha ao carregar a fonte! Verifique o caminho e a existência do arquivo.\n");
+        fprintf(stderr, "erro na fonte.\n");
         return -1;
-    } 
+    }
+
+    ALLEGRO_BITMAP* spaceship_image = al_load_bitmap("./imagens/navezinha_Certa.png");
+    if (!spaceship_image) {
+        fprintf(stderr, "erro na imagem.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP* bullet_sprite = NULL;
+    ALLEGRO_BITMAP* shooter_bullet_sprite = NULL;
+
+    bullet_sprite = al_load_bitmap("./imagens/tiro_player.png");
+    if (!bullet_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do projétil do jogador.\n");
+        return -1;
+    }
+
+    shooter_bullet_sprite = al_load_bitmap("./imagens/tiro_dadiva.png");
+    if (!shooter_bullet_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do projétil dos inimigos atiradores.\n");
+        return -1;
+    }
+
+
+    ALLEGRO_BITMAP* enemy_sprite = al_load_bitmap("./imagens/inimigo_1.png");
+    if (!enemy_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do inimigo.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP* shooter_enemy_sprite = al_load_bitmap("./imagens/inimigo_2.png");
+    if (!shooter_enemy_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do inimigo atirador.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP* scrap_sprite = al_load_bitmap("./imagens/scrap.webp");
+    if (!scrap_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite de sucata.\n");
+        return -1;
+    }
+
 
     ALLEGRO_DISPLAY* disp = al_create_display(X_SCREEN, Y_SCREEN);
 
@@ -281,25 +324,31 @@ int main() {
 
                 draw_shield_timer(player_shield, font, 330, 15);
 
-                al_draw_filled_rectangle(player_1->x - player_1->side / 2, player_1->y - player_1->side / 2,
-                                         player_1->x + player_1->side / 2, player_1->y + player_1->side / 2,
-                                         al_map_rgb(255, 0, 0));
+                square_draw(player_1, spaceship_image);
 
+                draw_enemies(enemies, enemy_sprite);
 
-
-                draw_enemies(enemies);
-                draw_scrap(scrap_list);
+                draw_scrap(scrap_list, scrap_sprite);
 
                 for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
-                    al_draw_filled_circle(index->x, index->y, 2, al_map_rgb(255, 0, 0));
+                    // Centraliza o sprite do projétil na posição do projétil
+                    al_draw_bitmap(bullet_sprite, index->x - al_get_bitmap_width(bullet_sprite) / 2, 
+                                index->y - al_get_bitmap_height(bullet_sprite) / 2, 0);
                 }
 
+
                 for (ShooterEnemy *shooter = shooter_enemies; shooter != NULL; shooter = shooter->next) {
-                    al_draw_filled_rectangle(shooter->x - 10, shooter->y - 10, shooter->x + 10, shooter->y + 10, al_map_rgb(0, 0, 255));
+                    // Desenha o sprite do inimigo atirador
+                    al_draw_bitmap(shooter_enemy_sprite, shooter->x - al_get_bitmap_width(shooter_enemy_sprite) / 2,
+                                shooter->y - al_get_bitmap_height(shooter_enemy_sprite) / 2, 0);
+
+                    // Desenha os projéteis disparados pelo inimigo atirador
                     for (bullet_enemy *index = shooter->shots; index != NULL; index = index->next) {
-                        al_draw_filled_circle(index->x, index->y, 2, al_map_rgb(0, 0, 255));
+                        al_draw_bitmap(shooter_bullet_sprite, index->x - al_get_bitmap_width(shooter_bullet_sprite) / 2,
+                                    index->y - al_get_bitmap_height(shooter_bullet_sprite) / 2, 0);
                     }
                 }
+
 
                 if (boss != NULL) {
                     draw_boss(boss);
@@ -339,7 +388,13 @@ int main() {
     score_destroy(score);
     al_destroy_font(font);
     al_destroy_display(disp);
+    al_destroy_bitmap(scrap_sprite);
+    al_destroy_bitmap(enemy_sprite);
+    al_destroy_bitmap(shooter_enemy_sprite);
+    al_destroy_bitmap(bullet_sprite);
+    al_destroy_bitmap(shooter_bullet_sprite);
     al_destroy_timer(timer);
+    al_destroy_bitmap(spaceship_image);
     al_destroy_event_queue(queue);
     square_destroy(player_1);
     selection_screen_destroy(selection_screen);

@@ -20,11 +20,19 @@ void move_scrap(Scrap *head, float speed) {
     }
 }
 
-void draw_scrap(Scrap *head) {
+void draw_scrap(Scrap *head, ALLEGRO_BITMAP* scrap_sprite) {
     for (Scrap *current = head; current != NULL; current = current->next) {
-        al_draw_filled_rectangle(current->x - 5, current->y - 5, current->x + 5, current->y + 5, al_map_rgb(150, 150, 150));
+        // Desenha o sprite redimensionado na posição da sucata
+        al_draw_scaled_bitmap(scrap_sprite, 
+                              0, 0, 
+                              al_get_bitmap_width(scrap_sprite), al_get_bitmap_height(scrap_sprite), 
+                              current->x - 10, current->y - 10,  // Posição centralizada
+                              25, 25,  // Tamanho desejado da sucata
+                              0);
     }
 }
+
+
 
 void scrap_count_draw(int scrap_count) {
     // Desenha o contador de sucata na tela, ao lado da barra de vida

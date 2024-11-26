@@ -1,7 +1,7 @@
 #ifndef __BULLET_ENEMY__
 #define __BULLET_ENEMY__
 
-#define BULLET_ENEMY_MOVE 6
+#define BULLET_ENEMY_MOVE 10
 
 typedef struct bullet_enemy {
     unsigned short x;  
