@@ -18,7 +18,7 @@ typedef struct {
     unsigned short y;
     joystick *control;
     pistol *gun;
-    Shield *shield;      
+    Shield *shield;
 } square;
 
 square* square_create(unsigned char side, unsigned char face, unsigned short x, unsigned short y, unsigned short max_x, unsigned short max_y);

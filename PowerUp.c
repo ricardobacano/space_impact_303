@@ -24,8 +24,6 @@ void activate_power_up(square *player, int *scrap_count, int *power_up_stage, ch
             break;
 
         case 1:  // Power-up: Rocket Missile
-            // Aqui você pode implementar o aumento do dano ou outro efeito
-            // player->gun->damage += 5;
             snprintf(power_up_message, 50, "Power-up ativado: Rocket Missile!");
             break;
 

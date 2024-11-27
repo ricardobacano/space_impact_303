@@ -1,6 +1,7 @@
 #ifndef __BOSS_H__
 #define __BOSS_H__
 
+#include "Square.h"
 #include "Bullet.h"
 #include "HealthBar.h"
 #include "Square.h"

@@ -72,7 +72,6 @@ int main() {
         return -1;
     }
 
-
     ALLEGRO_BITMAP* enemy_sprite = al_load_bitmap("./imagens/inimigo_1.png");
     if (!enemy_sprite) {
         fprintf(stderr, "Erro ao carregar o sprite do inimigo.\n");
@@ -170,19 +169,29 @@ int main() {
                         printf("Boss apareceu!\n");
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_E) {
-                        shield_activate(player_1->shield);
+                        if (power_up_stage >= 1) {  
+                            shield_activate(player_1->shield);
+                        } else {
+                            printf("Você ainda não tem o escudo desbloqueado!\n");
+                        }
                     }
                     if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_H) {
                         debug_mode = !debug_mode;  
                     }
                     if (!is_paused) {
-                        if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
-                        } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
-                        } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 1;  
-                        } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 1;  
-                        } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 1;  
+                        if (event.keyboard.keycode == ALLEGRO_KEY_A) { 
+                            player_1->control->left = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { 
+                            player_1->control->right = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { 
+                            player_1->control->up = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { 
+                            player_1->control->down = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { 
+                            player_1->control->fire = 1;
+                 
                         }
-                    }
+                    } 
                 } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
                 if (!is_paused) {
                     if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 0;  
@@ -238,7 +247,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 10 == 0) {
+                    if (rand() % 300 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
@@ -253,12 +262,31 @@ int main() {
                     float power_up_message_timer = 0;
 
                     if (scrap_count >= 10) {
-                        activate_power_up(player_1, &scrap_count, &power_up_stage, power_up_message, &power_up_message_timer);
+                        scrap_count = 0; 
+                        power_up_stage++; 
+
+                        if (power_up_stage > 3) power_up_stage = 3;  
+
+                        // mensagem de a power-up desbloqueado
+                        switch (power_up_stage) {
+                            case 1:
+                                snprintf(power_up_message, sizeof(power_up_message), "ESCUDO CONSTRUIDO!");
+                                break;
+                            case 2:
+                                snprintf(power_up_message, sizeof(power_up_message), "MÍSSEL DISPONÍVEL!");
+                                break;
+                            case 3:
+                                snprintf(power_up_message, sizeof(power_up_message), "REPARO PRONTO!");
+                                break;
+                        }
+
+                        power_up_message_timer = 2.0;  
                     }
+
 
                     if (power_up_message_timer > 0) {
                         al_draw_text(font, al_map_rgb(255, 255, 0), X_SCREEN / 2, 50, ALLEGRO_ALIGN_CENTER, power_up_message);
-                        power_up_message_timer -= 1.0 / 30.0;  // Reduz o tempo restante para exibição
+                        power_up_message_timer -= 1.0 / 30.0; 
                     }
 
                     ShooterEnemy *current_shooter = shooter_enemies;
