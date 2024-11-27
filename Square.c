@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <allegro5/allegro.h>
 
 #include "Square.h"
@@ -137,4 +138,11 @@ void update_bullets(square *player) {
             index = (bullet*) index->next;
         }
     }
+}
+
+void update_player_hp(square *player, int delta_hp) {
+    player->hp += delta_hp;
+    if (player->hp > 100) player->hp = 100;  // Limita ao máximo
+    if (player->hp < 0) player->hp = 0;      // Evita valores negativos
+    printf("HP do jogador atualizado para: %d\n", player->hp);
 }

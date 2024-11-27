@@ -28,5 +28,6 @@ void square_destroy(square *element);
 void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image);
 void update_position(square *player);
 void update_bullets(square *player);
+void update_player_hp(square *player, int delta_hp);
 
 #endif  
