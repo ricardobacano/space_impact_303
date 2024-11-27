@@ -18,9 +18,9 @@
 #include "FPS.h"
 #include "Shield.h"
 #include "ShieldBar.h"
-#include "SelectionScreen.h"
 #include "BackGround.h"
 #include "Explosion.h"
+#include "PowerUp.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -127,12 +127,11 @@ int main() {
 
     Scrap *scrap_list = NULL;
     int scrap_count = 0; 
+    int power_up_stage = 0; 
 
     Boss *boss = NULL;
 
     Explosion *explosions = NULL;
-
-    SelectionScreen *selection_screen = selection_screen_create();
 
     ALLEGRO_EVENT event;
     al_start_timer(timer);
@@ -153,17 +152,7 @@ int main() {
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
         } else {
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
-                if (selection_screen->is_visible) {
-                    selection_screen_handle_input(selection_screen, &event);
-                    if (event.keyboard.keycode == ALLEGRO_KEY_Q) {
-                        selection_screen_hide(selection_screen);
-                        is_paused = false;
-                        player_1->control->left = 0;
-                        player_1->control->right = 0;
-                        player_1->control->up = 0;
-                        player_1->control->down = 0;
-                    }
-                } else {
+
                     if (event.keyboard.keycode == ALLEGRO_KEY_2) {
                         toggle_game_speed(timer, &is_double_speed);
                         background_update(2.0);
@@ -183,11 +172,9 @@ int main() {
                     if (event.keyboard.keycode == ALLEGRO_KEY_E) {
                         shield_activate(player_1->shield);
                     }
-
                     if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_H) {
                         debug_mode = !debug_mode;  
                     }
-
                     if (!is_paused) {
                         if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 1;  
                         } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 1;  
@@ -196,8 +183,7 @@ int main() {
                         } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 1;  
                         }
                     }
-                }
-            } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
+                } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
                 if (!is_paused) {
                     if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 0;  
                     } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 0; 
@@ -252,7 +238,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 500 == 0) {
+                    if (rand() % 10 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
@@ -263,10 +249,16 @@ int main() {
                         }
                     }
 
+                    char power_up_message[50] = "";  
+                    float power_up_message_timer = 0;
+
                     if (scrap_count >= 10) {
-                        scrap_count = 0;
-                        selection_screen_show(selection_screen);
-                        is_paused = true;
+                        activate_power_up(player_1, &scrap_count, &power_up_stage, power_up_message, &power_up_message_timer);
+                    }
+
+                    if (power_up_message_timer > 0) {
+                        al_draw_text(font, al_map_rgb(255, 255, 0), X_SCREEN / 2, 50, ALLEGRO_ALIGN_CENTER, power_up_message);
+                        power_up_message_timer -= 1.0 / 30.0;  // Reduz o tempo restante para exibição
                     }
 
                     ShooterEnemy *current_shooter = shooter_enemies;
@@ -335,7 +327,6 @@ int main() {
 
                 al_clear_to_color(al_map_rgb(0, 0, 0));
 
-                selection_screen_draw(selection_screen, font);
                 background_draw();
                 healthbar_draw(player_1_healthbar);
                 shield_draw(player_1->shield, player_1->x, player_1->y, player_1->side / 2);
@@ -376,12 +367,6 @@ int main() {
 
                 if (boss != NULL) {
                     draw_boss(boss);
-                }
-
-                if (selection_screen->is_visible) {
-                    al_clear_to_color(al_map_rgb(0, 0, 0)); // Garante que o fundo inicial seja preto
-                    selection_screen_draw(selection_screen, font);
-                    selection_screen_handle_input(selection_screen, &event);
                 }
 
                 score_draw(score);
@@ -425,7 +410,6 @@ int main() {
     al_destroy_event_queue(queue);
     square_destroy(player_1);
     al_destroy_bitmap(boss_sprite);
-    selection_screen_destroy(selection_screen);
-
+    
     return 0;
 }
