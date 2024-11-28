@@ -62,7 +62,7 @@ void square_shot(square *element) {
     if (shot) element->gun->shots = shot;
 }
 
-void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image) {
+void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image, bool debug_mode) {
     if (!player || !spaceship_image) return;
 
     float scale_y = 1.0;  // Escala padrão
@@ -84,6 +84,17 @@ void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image) {
         player->side * scale_y,                   // Nova altura (ajustada pela escala)
         0                                         // Sem flags adicionais
     );
+
+    if (debug_mode) {
+        al_draw_rectangle(
+            player->x - player->side / 2, // Posição X (esquerda)
+            player->y - player->side / 2, // Posição Y (cima)
+            player->x + player->side / 2, // Posição X (direita)
+            player->y + player->side / 2, // Posição Y (baixo)
+            al_map_rgb(255, 0, 0),        // Cor (vermelho)
+            1                               // Espessura da linha
+        );
+    }
 }
 
 void square_destroy(square *element) {

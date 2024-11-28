@@ -21,12 +21,13 @@
 #include "BackGround.h"
 #include "Explosion.h"
 #include "PowerUp.h"
+#include "BossShot.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
 #define INITIAL_ENEMY_SPEED 2.0f  
 #define MAX_ENEMY_SPEED 10.0f     
-#define SPEED_INCREMENT 0.5f    
+#define SPEED_INCREMENT 0.8f    
 #define SPAWN_MARGIN 50 
 
 float enemy_speed = INITIAL_ENEMY_SPEED;
@@ -102,6 +103,18 @@ int main() {
         return -1; // Saia do programa se o sprite não puder ser carregado
     }
 
+    ALLEGRO_BITMAP *shot1_boss = al_load_bitmap("./imagens/tiroboss2_limpo.png");
+    if (!shot1_boss) {
+        fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
+        return -1; // Saia do programa se o sprite não puder ser carregado
+    }
+
+    ALLEGRO_BITMAP *shot2_boss = al_load_bitmap("./imagens/roundaboud.png");
+    if (!shot2_boss) {
+        fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
+        return -1; // Saia do programa se o sprite não puder ser carregado
+    }
+
     ALLEGRO_DISPLAY* disp = al_create_display(X_SCREEN, Y_SCREEN);
 
     al_register_event_source(queue, al_get_keyboard_event_source());
@@ -127,7 +140,8 @@ int main() {
     Scrap *scrap_list = NULL;
     int scrap_count = 0; 
     int power_up_stage = 0; 
-
+    int shoot_pattern = 1;
+ 
     Boss *boss = NULL;
 
     Explosion *explosions = NULL;
@@ -207,7 +221,7 @@ int main() {
 
                     background_update(enemy_speed / 2.0);  
 
-                    if (frame_count % 600 == 0) {
+                    if (frame_count % 120 == 0) {
                         enemy_speed += SPEED_INCREMENT;
                         if (enemy_speed > MAX_ENEMY_SPEED) {
                             enemy_speed = MAX_ENEMY_SPEED;
@@ -233,7 +247,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 200 == 0) {  // Chance de criar um inimigo atirador
+                    if (boss == NULL && rand() % 200 == 0) {  // Chance de criar um inimigo atirador
                     float new_x = X_SCREEN;
                     float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);  
 
@@ -261,7 +275,7 @@ int main() {
                     char power_up_message[50] = "";  
                     float power_up_message_timer = 0;
 
-                    if (scrap_count >= 10) {
+                    if (scrap_count >= 3) {
                         scrap_count = 0; 
                         power_up_stage++; 
 
@@ -298,8 +312,10 @@ int main() {
                     }
 
                     if (boss != NULL) {
-                        update_boss(boss);
+                        update_boss(boss, player_1);
                     }
+
+                    
 
                     float delta_time = 5.0 / 30.0;
 
@@ -308,11 +324,14 @@ int main() {
                     update_enemies(&enemies, enemy_speed);
                     update_shooter_enemy(&shooter_enemies);
                     update_explosions(&explosions, delta_time);
+                    update_boss(boss,player_1);
+                    shoot_pattern = update_boss_shooting(boss, frame_count, shoot_pattern, shot1_boss, shot2_boss);
 
                     move_shooter_bullets(shooter_enemies, player_1);
                     move_scrap(scrap_list, enemy_speed);
                     shield_update(player_1->shield, al_get_time());
                     shieldbar_update(player_1_shieldbar, player_1->shield->is_active ? player_1->shield->duration - (al_get_time() - player_1->shield->start_time) : 0);
+
 
                     check_collision_with_player(player_1, &enemies);
                     check_kill(player_1, &enemies, score, &explosions);
@@ -360,14 +379,13 @@ int main() {
                 shield_draw(player_1->shield, player_1->x, player_1->y, player_1->side / 2);
                 shield_draw_bar(player_1->shield, font, 120, 10, 200, 20);
 
-                
                 char scrap_text[50];
                 snprintf(scrap_text, 50, "Sucata: %d", scrap_count);
                 al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);
 
                 draw_shield_timer(player_1->shield, font, 330, 15);
 
-                square_draw(player_1, spaceship_image);
+                square_draw(player_1, spaceship_image, debug_mode);
                 
                 draw_enemies(enemies, enemy_sprite, debug_mode);
 
@@ -396,6 +414,7 @@ int main() {
                 if (boss != NULL) {
                     draw_boss(boss);
                 }
+
 
                 score_draw(score);
 

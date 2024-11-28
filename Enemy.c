@@ -76,13 +76,19 @@ void destroy_enemy(Enemy *enemy) {
     free(enemy);
 }
 
-void destroy_all_enemies(Enemy *head) {
-    Enemy *current = head;
+void destroy_all_enemies(Enemy **head) {
+    Enemy *current = *head;
+    Enemy *next = NULL;
+    
+    // Itera sobre todos os inimigos e destrói cada um
     while (current != NULL) {
-        Enemy *next = current->next;
-        destroy_enemy(current); 
-        current = next;
+        next = current->next;  // Salva o próximo inimigo
+        destroy_enemy(current); // Libera o inimigo atual
+        current = next;         // Avança para o próximo inimigo
     }
+    
+    // Após destruir todos, a cabeça da lista deve ser NULL
+    *head = NULL;
 }
 
 void check_collision_with_player(square *player, Enemy **enemies) {

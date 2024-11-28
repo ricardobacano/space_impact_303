@@ -1,8 +1,11 @@
 # Definições de compilador e flags
 CC = gcc
 
+# Flags de compilação
 CFLAGS = -Wall $(shell pkg-config --cflags allegro-5 allegro_font-5 allegro_primitives-5 allegro_image-5 allegro_ttf-5 allegro_audio-5 allegro_acodec-5)
-LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_font-5 allegro_primitives-5 allegro_image-5 allegro_ttf-5 allegro_audio-5 allegro_acodec-5)
+
+# Flags de linkagem
+LDFLAGS = $(shell pkg-config --libs allegro-5 allegro_font-5 allegro_primitives-5 allegro_image-5 allegro_ttf-5 allegro_audio-5 allegro_acodec-5) -lm
 
 # Utiliza wildcard para encontrar todos os arquivos .c na pasta atual
 SOURCES = $(wildcard *.c)
@@ -14,6 +17,7 @@ EXECUTABLE = space_impact
 # Regras principais
 all: $(EXECUTABLE)
 
+# Compilar o executável
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@ $(LDFLAGS)
 
@@ -21,7 +25,7 @@ $(EXECUTABLE): $(OBJECTS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Limpa os arquivos gerados durante a compilacão
+# Limpa os arquivos gerados durante a compilação
 clean:
 	rm -f $(OBJECTS) $(EXECUTABLE)
 
