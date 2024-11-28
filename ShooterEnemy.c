@@ -149,7 +149,29 @@ unsigned char check_collision_with_player_shooter_enemy(square *player, ShooterE
             player_bottom >= enemy_top && player_top <= enemy_bottom) {
             
             // Colisão detectada: reduz HP do jogador
-            player->hp -= 20;
+            if (player->shield && player->shield->is_active) {
+                // Dano ao escudo, já que ele está ativo
+                int damage_to_shield = 10; // Dano do inimigo atirador (ajuste conforme necessário)
+                printf("Escudo ativo! Dano recebido: %d\n", damage_to_shield);
+
+                // Aplica dano ao escudo
+                if (player->shield->hp > damage_to_shield) {
+                    player->shield->hp -= damage_to_shield;
+                } else {
+                    int excess_damage = damage_to_shield - player->shield->hp;
+                    player->shield->hp = 0;
+                    player->shield->is_active = false;  // Escudo destruído
+                    printf("Escudo destruído! Excesso de dano: %d\n", excess_damage);
+
+                    // Aplica o excesso de dano ao HP do jogador
+                    player->hp -= excess_damage;
+                }
+            } else {
+                // Se o escudo não estiver ativo, aplica dano diretamente ao HP
+                int damage = 20; // Dano do inimigo atirador
+                player->hp -= damage;
+                printf("Jogador tomou dano! HP restante: %d\n", player->hp);
+            }
 
             // Remove o inimigo da lista
             ShooterEnemy *next_enemy = current->next;

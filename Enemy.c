@@ -80,7 +80,7 @@ void destroy_all_enemies(Enemy *head) {
     Enemy *current = head;
     while (current != NULL) {
         Enemy *next = current->next;
-        destroy_enemy(current);
+        destroy_enemy(current); 
         current = next;
     }
 }

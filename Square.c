@@ -29,7 +29,7 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
     }
 
     new_square->shield->is_active = false;
-    new_square->shield->hp = 100.0f;  // HP inicial do escudo
+    new_square->shield->hp = 100.0f;  
     new_square->shield->max_hp = 100.0f;
     new_square->shield->cooldown = SHIELD_COOLDOWN;
     new_square->shield->duration = 5.0f;

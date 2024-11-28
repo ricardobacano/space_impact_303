@@ -368,7 +368,7 @@ int main() {
                 draw_shield_timer(player_1->shield, font, 330, 15);
 
                 square_draw(player_1, spaceship_image);
-
+                
                 draw_enemies(enemies, enemy_sprite, debug_mode);
 
                 draw_scrap(scrap_list, scrap_sprite);
@@ -418,7 +418,7 @@ int main() {
     }
 
     background_destroy();
-    destroy_all_enemies(enemies);
+    destroy_all_enemies(&enemies);
     destroy_all_shooter_enemies(shooter_enemies);
     if (shooter_enemy_sprite) 
         al_destroy_bitmap(shooter_enemy_sprite);
