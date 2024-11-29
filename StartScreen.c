@@ -2,11 +2,20 @@
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h> 
-#include <allegro5/allegro_ttf.h> 
+#include <allegro5/allegro_ttf.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "StartScreen.h"
+#include "ControlsScreen.h"
+#include "CreditScreen.h"
+
+typedef enum {
+    MENU_START,
+    MENU_CONTROLS,
+    MENU_CREDITS,
+    MENU_QUIT
+} MenuOption;
 
 void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_FONT *font) {
     // Inicializar o addon de imagens
@@ -23,7 +32,6 @@ void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, 
         fprintf(stderr, "Falha ao inicializar addon de fonte TTF!\n");
         exit(1);
     }
-    
 
     // Carregar a imagem de fundo
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/fundo.png");
@@ -31,6 +39,7 @@ void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, 
         fprintf(stderr, "Falha ao carregar a imagem de fundo! Verifique o caminho e a existência do arquivo.\n");
         exit(1);
     }
+
     // Obter dimensões da tela e da imagem
     int display_width = al_get_display_width(display);
     int display_height = al_get_display_height(display);
@@ -41,31 +50,51 @@ void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, 
     float x_pos = (display_width - background_width) / 2;
     float y_pos = (display_height - background_height) / 2 - 50;
 
-    // (r,g,b) value is (45,35,40)
     al_clear_to_color(al_map_rgb(29, 36, 99));
     al_draw_bitmap(background, x_pos, y_pos, 0);
 
-    al_draw_text(font, al_map_rgb(255, 255, 255), display_width / 2,
-                 display_height / 2 + 100, ALLEGRO_ALIGN_CENTER, "Pressione ENTER para iniciar");
+    // Opções do menu
+    MenuOption selected_option = MENU_START;
 
-    // Atualizar a tela
-    al_flip_display();
-
-    // Loop para aguardar o pressionamento da tecla ENTER
+    // Loop de navegação do menu
     ALLEGRO_EVENT event;
     while (1) {
+        
+        // Desenhando as opções do menu
+        al_draw_text(font, selected_option == MENU_START ? al_map_rgb(255, 0, 0) : al_map_rgb(255, 255, 255), display_width / 2, display_height / 2 + 90, ALLEGRO_ALIGN_CENTER, "Iniciar");
+        al_draw_text(font, selected_option == MENU_CONTROLS ? al_map_rgb(255, 0, 0) : al_map_rgb(255, 255, 255), display_width / 2, display_height / 2 + 120, ALLEGRO_ALIGN_CENTER, "Controles");
+        al_draw_text(font, selected_option == MENU_CREDITS ? al_map_rgb(255, 0, 0) : al_map_rgb(255, 255, 255), display_width / 2, display_height / 2 + 150, ALLEGRO_ALIGN_CENTER, "Créditos");
+
+        al_flip_display();
+
+        // Aguardar evento
         al_wait_for_event(queue, &event);
 
-        if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_ENTER) {
-            break;
+        if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+            if (event.keyboard.keycode == ALLEGRO_KEY_UP) {
+                selected_option = (selected_option == MENU_START) ? MENU_CREDITS : selected_option - 1;
+            }
+            if (event.keyboard.keycode == ALLEGRO_KEY_DOWN) {
+                selected_option = (selected_option == MENU_CREDITS) ? MENU_START : selected_option + 1;
+            }
+            if (event.keyboard.keycode == ALLEGRO_KEY_ENTER) {
+                if (selected_option == MENU_START) {
+                    break;
+                } else if (selected_option == MENU_CONTROLS) {
+                    display_controls_screen(display, queue, font);
+                } else if (selected_option == MENU_CREDITS) {
+                    display_credits_screen(display, queue, font);
+                }
+            }
+            if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+                exit(0);
+            }
         }
+
         if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-            // Liberar a memória antes de sair
-            al_destroy_bitmap(background);
             exit(0);
         }
     }
 
-    // Liberar a memória da imagem de fundo
     al_destroy_bitmap(background);
 }

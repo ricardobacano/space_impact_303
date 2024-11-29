@@ -39,12 +39,14 @@ int main() {
     al_install_keyboard();
     al_init_ttf_addon();
     al_init_font_addon();
-    al_init_image_addon(); 
+    al_init_acodec_addon(); 
 
     srand(time(NULL));  // Semente para valores aleatórios baseada no tempo
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
+    
+    al_init_image_addon();
 
     ALLEGRO_FONT* font = al_load_font("./imagens/fontes.ttf",15,5);
     if (!font) {
@@ -359,11 +361,17 @@ int main() {
 
                         if (prev_scrap) {
                             prev_scrap->next = current_scrap->next;
-                            destroy_scrap(current_scrap);
+                            if (current_scrap != NULL) {
+                                destroy_scrap(current_scrap);
+                                current_scrap = NULL;  
+                            }
                             current_scrap = prev_scrap->next;
                         } else {
                             scrap_list = current_scrap->next;
-                            destroy_scrap(current_scrap);
+                            if (current_scrap != NULL) {
+                                destroy_scrap(current_scrap);
+                                current_scrap = NULL;  
+                            }
                             current_scrap = scrap_list;
                         }
                     } else {
@@ -457,6 +465,7 @@ int main() {
     al_destroy_event_queue(queue);
     square_destroy(player_1);
     al_destroy_bitmap(boss_sprite);
+    joystick_destroy(player_1->control);
     
     return 0;
 }
