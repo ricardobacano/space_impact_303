@@ -30,7 +30,7 @@ void activate_power_up(square *player, int *scrap_count, int *power_up_stage, ch
         case 2:  // Power-up: Repair Health
             player->hp += 20;  // Cura o jogador
             if (player->hp > 100) player->hp = 100;  // Limita o HP a 100
-            snprintf(power_up_message, 50, "Power-up ativado: Repair Health!");
+            snprintf(power_up_message, 50, "Power-up ativado: Reparar Vida!");
             break;
     }
 

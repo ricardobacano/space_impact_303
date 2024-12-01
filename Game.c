@@ -24,6 +24,7 @@
 #include "PowerUp.h"
 #include "BossShot.h"
 #include "Laser.h"
+#include "IntroScreen.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -124,6 +125,8 @@ int main() {
     al_register_event_source(queue, al_get_keyboard_event_source());
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
+
+    show_intro_screen(disp, font, queue);
 
     background_init("./imagens/fundo_space.png");
     display_start_screen(disp, queue, font);
@@ -370,6 +373,7 @@ int main() {
                     laser_check_collision_with_enemies(laser, &enemies);
                     laser_check_collision_with_boss(laser, boss);
                     check_boss_bullets_with_player(player_1, boss);
+                    laser_check_collision_with_shooter_enemies(laser, &shooter_enemies);
 
                     if (boss != NULL) {
                         check_boss_collision_with_player(player_1, boss);

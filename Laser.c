@@ -108,6 +108,39 @@ void activate_laser(Laser *laser) {
     laser->x = 0;  // Começa do lado esquerdo da tela
 }
 
+void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies) {
+    if (!laser || !shooter_enemies) return;
+
+    ShooterEnemy *current = *shooter_enemies;
+    ShooterEnemy *prev = NULL;
+
+    while (current != NULL) {
+        // Calcula os limites do inimigo atirador
+        float shooter_left = current->x - current->hitbox_width / 2;
+        float shooter_right = current->x + current->hitbox_width / 2;
+
+        // Verifica se o laser cobre a área do inimigo
+        if (laser->x <= shooter_right && (laser->x + laser->width) >= shooter_left) {
+            printf("Inimigo atirador destruído pelo laser!\n");
+
+            // Remove o inimigo atirador da lista
+            if (prev == NULL) {
+                *shooter_enemies = current->next;
+            } else {
+                prev->next = current->next;
+            }
+
+            ShooterEnemy *to_remove = current;
+            current = current->next;
+
+            destroy_shooter_enemy(to_remove);  // Libera a memória do inimigo atirador
+        } else {
+            // Avança para o próximo inimigo
+            prev = current;
+            current = current->next;
+        }
+    }
+}
 void draw_laser_cooldown_bar(float cooldown_timer, float max_cooldown, float screen_width, float screen_height) {
     float bar_width = screen_width * 0.3;  // Largura da barra (80% da tela)
     float bar_height = 20;  // Altura da barra

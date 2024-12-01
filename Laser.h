@@ -5,6 +5,7 @@
 #include "Square.h"  // Para usar a estrutura square
 #include "Boss.h"
 #include "Enemy.h"
+#include "ShooterEnemy.h"
 #include <allegro5/allegro_primitives.h>
 
 // Definições para o laser
@@ -31,4 +32,6 @@ void activate_laser(Laser *laser);                                              
 void laser_check_collision_with_boss(Laser *laser, Boss *boss);
 void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies);
 void draw_laser_cooldown_bar(float cooldown_timer, float max_cooldown, float screen_width, float screen_height);
+void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies);
+
 #endif
