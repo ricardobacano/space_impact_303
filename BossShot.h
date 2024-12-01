@@ -11,7 +11,7 @@
 #define BOSS_SHOT_TYPE_SLOW 4
 #define BOSS_SHOT_TYPE_FAST 3
 #define BOSS_FAST_BULLET_SPEED 8.0f   // Velocidade do tiro rápido
-#define BOSS_SLOW_BULLET_SPEED 4.0f   // Velocidade do tiro bumerangue
+#define BOSS_SLOW_BULLET_SPEED 10.0f   // Velocidade do tiro bumerangue
 
 
 // Estrutura para as balas do Boss

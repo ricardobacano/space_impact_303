@@ -23,8 +23,8 @@ void activate_power_up(square *player, int *scrap_count, int *power_up_stage, ch
             snprintf(power_up_message, 50, "Power-up ativado: Extra Shield!");
             break;
 
-        case 1:  // Power-up: Rocket Missile
-            snprintf(power_up_message, 50, "Power-up ativado: Rocket Missile!");
+        case 1:  
+            snprintf(power_up_message, 50, "Power-up ativado: LASER! Use 'L'");
             break;
 
         case 2:  // Power-up: Repair Health

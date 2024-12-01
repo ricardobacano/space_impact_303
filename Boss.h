@@ -4,12 +4,13 @@
 #include "Square.h"
 #include "HealthBar.h"
 #include "BossShot.h"  // Aqui você inclui apenas uma vez o arquivo BossShot.h
+#include "Shield.h"
 
 #define SCREEN_HEIGHT 600
 
 #define BOSS_WIDTH 100
 #define BOSS_HEIGHT 60
-#define BOSS_MAX_HP 300
+#define BOSS_MAX_HP 1000
 #define BOSS_SHOT_COOLDOWN 100  // Tempo de recarga entre os disparos do boss
 #define BOSS_SHOT_RATE 10       // Número de frames entre cada disparo enquanto ele está atirando
 #define BOSS_MOVE_SPEED 0.7       // Velocidade de movimento vertical do boss
@@ -41,7 +42,9 @@ void draw_boss(Boss *boss, bool debug_mode);
 void check_boss_collision_with_player(square *player, Boss *boss);  // Função para verificar colisões com o jogador
 int update_boss_shooting(Boss *boss, int frame_count, int shoot_pattern, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite);
 void update_boss_shots(Boss *boss);
-int check_collision(float x1, float y1, float width1, float height1, float x2, float y2, float width2, float height2);
+int check_collision(float x1, float y1, float width1, float height1, float x2, float y2, float width2, float height2); 
 void check_player_bullets_with_boss_shots(square *player, Boss *boss);
+void check_player_bullets_with_boss(square *player, Boss *boss);
+void check_boss_bullets_with_player(square *player, Boss *boss);
 
 #endif
