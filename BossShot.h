@@ -9,7 +9,10 @@
 #define BOSS_SHOT_TYPE_NORMAL 0
 #define BOSS_SHOT_TYPE_SPLIT 1
 #define BOSS_SHOT_TYPE_SLOW 4
-#define BOSS_SHOT_TYPE_FAST 3 
+#define BOSS_SHOT_TYPE_FAST 3
+#define BOSS_FAST_BULLET_SPEED 8.0f   // Velocidade do tiro rápido
+#define BOSS_SLOW_BULLET_SPEED 4.0f   // Velocidade do tiro bumerangue
+
 
 // Estrutura para as balas do Boss
 typedef struct boss_shot {
@@ -28,5 +31,6 @@ void boss_shot_move(boss_shot *shot);
 void boss_shot_destroy(boss_shot *shot);
 void boss_shot_draw(boss_shot *shot, ALLEGRO_BITMAP *bullet_sprite);
 void boss_shot_handle_collision(boss_shot *shot, square *player);
+ALLEGRO_BITMAP *resize_sprite(ALLEGRO_BITMAP *original, int new_width, int new_height);
 
 #endif

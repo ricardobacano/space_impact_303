@@ -348,6 +348,35 @@ int main() {
                     p1k = (player_1->hp <= 0) ? 1 : 0;
                 }
 
+                if (boss != NULL) {
+                    // Alterna o padrão de tiro a cada 150 frames
+                    if (frame_count % 150 == 0) {
+                        shoot_pattern = (shoot_pattern == 1) ? 2 : 1;
+                    }
+
+                    // Disparo baseado no padrão
+                    if (shoot_pattern == 1 && boss->cooldown == 0) {
+                        // Tiro bumerangue
+                        boss_shoot(boss, shot1_boss, shot2_boss); // Bumerangue como tipo principal
+                    } else if (shoot_pattern == 2 && boss->cooldown == 0) {
+                        // Tiro reto
+                        boss_shoot(boss, shot2_boss, shot1_boss); // Reto como tipo principal
+                    }
+
+                    // Atualiza os tiros do Boss
+                    update_boss_shots(boss);
+
+                    // Desenha os tiros do Boss
+                    boss_shot *current_shot = boss->shots;
+                    while (current_shot != NULL) {
+                        boss_shot_draw(current_shot, current_shot->sprite);
+                        current_shot = current_shot->next;
+                    }
+
+                    check_player_bullets_with_boss_shots(player_1, boss);
+
+                }
+
                 Scrap *prev_scrap = NULL;
                 Scrap *current_scrap = scrap_list;
 
@@ -420,7 +449,7 @@ int main() {
 
 
                 if (boss != NULL) {
-                    draw_boss(boss);
+                    draw_boss(boss, debug_mode);
                 }
 
 

@@ -27,31 +27,29 @@ Boss* create_boss(float x, float y, ALLEGRO_BITMAP *sprite) {
 void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite) {
     if (boss == NULL) return;
 
+    static int alternate_shot = 0; // Variável estática para alternar entre os tiros
+
     if (boss->cooldown == 0) {
-        // Debug: Verifique se a função boss_shoot foi chamada
-        printf("Boss atirando! Posição: (%.2f, %.2f)\n", boss->x, boss->y);
-
-        // Tipo de tiro rápido
-        boss_shot *new_fast_bullet = boss_shot_create(boss->x - BOSS_WIDTH / 2, boss->y, BOSS_SHOT_TYPE_FAST, 10);
-        if (new_fast_bullet) {
-            new_fast_bullet->next = boss->shots;
-            boss->shots = new_fast_bullet;
-            new_fast_bullet->sprite = fast_bullet_sprite;  // Atribui o sprite do tiro rápido
-
-            // Debug: Verifique se o tiro rápido foi criado
-            printf("Criado tiro rápido! Posição: (%.2d, %.2d)\n", new_fast_bullet->x, new_fast_bullet->y);
+        if (alternate_shot == 0) {
+            // Tiro rápido
+            boss_shot *new_fast_bullet = boss_shot_create(boss->x - BOSS_WIDTH / 2, boss->y, BOSS_SHOT_TYPE_FAST, 10);
+            if (new_fast_bullet) {
+                new_fast_bullet->next = boss->shots;
+                boss->shots = new_fast_bullet;
+                new_fast_bullet->sprite = fast_bullet_sprite;
+            }
+        } else {
+            // Tiro bumerangue
+            boss_shot *new_boomerang_bullet = boss_shot_create(boss->x - BOSS_WIDTH / 2, boss->y, BOSS_SHOT_TYPE_SPLIT, 5);
+            if (new_boomerang_bullet) {
+                new_boomerang_bullet->next = boss->shots;
+                boss->shots = new_boomerang_bullet;
+                new_boomerang_bullet->sprite = slow_bullet_sprite;
+            }
         }
 
-        // Tipo de tiro lento
-        boss_shot *new_slow_bullet = boss_shot_create(boss->x - BOSS_WIDTH / 2, boss->y, BOSS_SHOT_TYPE_SLOW, 5);
-        if (new_slow_bullet) {
-            new_slow_bullet->next = boss->shots;
-            boss->shots = new_slow_bullet;
-            new_slow_bullet->sprite = slow_bullet_sprite;  // Atribui o sprite do tiro lento
-
-            // Debug: Verifique se o tiro lento foi criado
-            printf("Criado tiro lento! Posição: (%.2d, %.2d)\n", new_slow_bullet->x, new_slow_bullet->y);
-        }
+        // Alterna para o próximo tipo de tiro
+        alternate_shot = 1 - alternate_shot;
 
         boss->cooldown = BOSS_SHOT_COOLDOWN;  // Reinicia o cooldown após atirar
     }
@@ -59,33 +57,26 @@ void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *
 
 
 int update_boss_shooting(Boss *boss, int frame_count, int shoot_pattern, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite) {
-    // Define o intervalo para alternar entre os padrões de disparo
+    if (!boss) return shoot_pattern;
+
+    // Alterna padrão de disparo a cada 150 frames
     if (frame_count % 150 == 0) {
-        // Alterna entre os padrões de disparo (1 = lento, 2 = rápido)
-        if (shoot_pattern == 1) {
-            shoot_pattern = 2;  // Muda para o padrão de disparo rápido
-            printf("Novo padrão de disparo: Rapido (2)\n");
-        } else {
-            shoot_pattern = 1;  // Muda para o padrão de disparo lento
-            printf("Novo padrão de disparo: Lento (1)\n");
-        }
+        shoot_pattern = (shoot_pattern == 1) ? 2 : 1;
     }
 
-    // Dependendo do padrão de disparo, chama a função de disparo do Boss
-    if (shoot_pattern == 1) {
-        // Disparo mais lento
-        if (frame_count % BOSS_SHOT_RATE == 0) {
-            boss_shoot(boss, slow_bullet_sprite, fast_bullet_sprite);  // Passa o sprite do tiro lento e rápido
-        }
-    } else if (shoot_pattern == 2) {
-        // Disparo mais rápido
-        if (frame_count % (BOSS_SHOT_RATE / 2) == 0) {
-            boss_shoot(boss, fast_bullet_sprite, slow_bullet_sprite);  // Passa o sprite do tiro rápido
-        }
+    // Realiza disparos conforme o padrão
+    if (shoot_pattern == 1 && boss->cooldown == 0) {
+        boss_shoot(boss, slow_bullet_sprite, fast_bullet_sprite);
+    } else if (shoot_pattern == 2 && boss->cooldown == 0) {
+        boss_shoot(boss, fast_bullet_sprite, slow_bullet_sprite);
     }
 
-    return shoot_pattern;  // Retorna o novo valor de shoot_pattern
+    // Reduz cooldown do Boss
+    if (boss->cooldown > 0) boss->cooldown--;
+
+    return shoot_pattern;
 }
+
 
 
 void update_boss(Boss *boss, square *player) {
@@ -117,7 +108,7 @@ void update_boss(Boss *boss, square *player) {
 }
 
 // Desenhar o Boss na tela
-void draw_boss(Boss *boss) {
+void draw_boss(Boss *boss, bool debug_mode) {
     if (!boss || !boss->sprite) return;
 
     // Desenha o sprite do Boss
@@ -134,13 +125,50 @@ void draw_boss(Boss *boss) {
     // Desenha os tiros do Boss
     boss_shot *current_shot = boss->shots;
     while (current_shot != NULL) {
-        // Debug: Verifique a posição do tiro antes de desenhá-lo
-        printf("Desenhando tiro em posição: (%.2d, %.2d)\n", current_shot->x, current_shot->y);
 
         boss_shot_draw(current_shot, current_shot->sprite);  // Usa o sprite correto para cada tipo de tiro
         current_shot = current_shot->next;  // Avança para o próximo tiro
     }
+
+    if (debug_mode) {
+        al_draw_rectangle(
+            boss->x - al_get_bitmap_width(boss->sprite) / 2,  // X inicial da hitbox
+            boss->y - al_get_bitmap_height(boss->sprite) / 2, // Y inicial da hitbox
+            boss->x + al_get_bitmap_width(boss->sprite) / 2,  // X final da hitbox
+            boss->y + al_get_bitmap_height(boss->sprite) / 2, // Y final da hitbox
+            al_map_rgb(255, 0, 0),                            // Cor da hitbox (vermelha)
+            1                                                 // Espessura da linha
+        );
+    }
 }
+
+void update_boss_shots(Boss *boss) {
+    boss_shot *current = boss->shots;
+    boss_shot *prev = NULL;
+
+    while (current != NULL) {
+        // Atualiza a posição do tiro
+        boss_shot_move(current);
+
+        // Remove o tiro se sair da tela ou concluir o movimento de bumerangue
+        if (current->x < 0 || current->x > X_SCREEN) {
+            if (prev == NULL) { // Removendo o primeiro tiro
+                boss->shots = current->next;
+            } else { // Removendo um tiro no meio ou no final
+                prev->next = current->next;
+            }
+
+            boss_shot *to_remove = current;
+            current = current->next;
+            boss_shot_destroy(to_remove); // Libera a memória
+        } else {
+            // Avança para o próximo tiro
+            prev = current;
+            current = current->next;
+        }
+    }
+}
+
 
 
 // Função para destruir o Boss e liberar a memória alocada
@@ -171,7 +199,58 @@ void check_boss_collision_with_player(square *player, Boss *boss) {
         (player->y + player->side / 2 >= boss->y - BOSS_HEIGHT / 2) &&
         (player->y - player->side / 2 <= boss->y + BOSS_HEIGHT / 2)) {
 
-        printf("Jogador colidiu com o Boss!\n");
-        player->hp -= 30;  // Reduz a vida do jogador em 30 ao colidir com o Boss
+        player->hp -= 5;  // Reduz a vida do jogador em 30 ao colidir com o Boss
     }
 }
+
+int check_collision(float x1, float y1, float width1, float height1,
+                    float x2, float y2, float width2, float height2) {
+    return !(x1 > x2 + width2 || x1 + width1 < x2 ||
+             y1 > y2 + height2 || y1 + height1 < y2);
+}
+
+void check_player_bullets_with_boss_shots(square *player, Boss *boss) {
+    if (!player || !boss || !player->gun || !player->gun->shots) return;
+
+    bullet *player_bullet = player->gun->shots;
+    bullet *prev_player_bullet = NULL;
+
+    boss_shot *boss_bullet = boss->shots;
+    boss_shot *prev_boss_bullet = NULL;
+
+    while (player_bullet != NULL) {
+        boss_bullet = boss->shots;
+        prev_boss_bullet = NULL;
+
+        while (boss_bullet != NULL) {
+            // Verifica colisão
+            if (check_collision(player_bullet->x, player_bullet->y, 10, 10,  // Supondo que o tamanho das balas do jogador seja 10x10
+                                boss_bullet->x, boss_bullet->y, 20, 20)) {  // Tamanho das balas do boss
+                if (boss_bullet->type == BOSS_SHOT_TYPE_SPLIT) {  // Apenas para tiros de bumerangue
+                    // Remove o tiro do boss
+                    if (prev_boss_bullet == NULL) {
+                        boss->shots = boss_bullet->next;
+                    } else {
+                        prev_boss_bullet->next = boss_bullet->next;
+                    }
+                    boss_shot_destroy(boss_bullet);
+
+                    // Remove o tiro do jogador
+                    if (prev_player_bullet == NULL) {
+                        player->gun->shots = player_bullet->next;
+                    } else {
+                        prev_player_bullet->next = player_bullet->next;
+                    }
+                    bullet_destroy(player_bullet);
+
+                    return; // Sai da verificação após destruir o par
+                }
+            }
+            prev_boss_bullet = boss_bullet;
+            boss_bullet = boss_bullet->next;
+        }
+        prev_player_bullet = player_bullet;
+        player_bullet = player_bullet->next;
+    }
+}
+

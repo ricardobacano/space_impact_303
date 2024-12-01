@@ -22,30 +22,46 @@ boss_shot* boss_shot_create(unsigned short x, unsigned short y, unsigned char ty
 void boss_shot_move(boss_shot *shot) {
     if (shot == NULL) return;
 
-    // Movimento padrão
-    shot->y += 10; // Movimento para baixo (ajustável conforme necessário)
+    // Define as velocidades com base no tipo do tiro
+    float speed_x = (shot->type == BOSS_SHOT_TYPE_FAST) ? BOSS_FAST_BULLET_SPEED : 0;
+    float speed_y = (shot->type == BOSS_SHOT_TYPE_SPLIT) ? BOSS_SLOW_BULLET_SPEED : BOSS_FAST_BULLET_SPEED;
 
-    // Debug: Verifique a posição do tiro após o movimento
-    printf("Tiro em movimento - Posição: (%.2d, %.2d)\n", shot->x, shot->y);
+    // Movimento para frente
+    if (shot->type == BOSS_SHOT_TYPE_FAST) {
+        shot->x -= speed_x; // Move para a esquerda
+    }
 
-    // Se a bala for do tipo dividido, ela pode ter diferentes comportamentos
+    // Movimento de bumerangue
     if (shot->type == BOSS_SHOT_TYPE_SPLIT) {
-        shot->x += shot->direction * 5; // Movimenta para os lados
-        if (shot->x <= 0 || shot->x >= 800) { // Inverte a direção se atingir as bordas da tela
-            shot->direction *= -1;
+        shot->x -= speed_x; // Move para a esquerda
+        shot->y += shot->direction * speed_y; // Movimento em Y
+
+        // Verifica o alcance e inverte direção para efeito de bumerangue
+        if (shot->y <= 0 || shot->y >= Y_SCREEN) {
+            shot->direction *= -1; // Inverte direção em Y
+        }
+
+        // Movimento de retorno em X
+        if (shot->x <= X_SCREEN / 2) { 
+            shot->x += speed_x; // Volta para a direita
         }
     }
 }
 
+
+
 // Função para desenhar as balas do Boss
 void boss_shot_draw(boss_shot *shot, ALLEGRO_BITMAP *bullet_sprite) {
-    if (shot == NULL || bullet_sprite == NULL) return;
+    if (!shot || !bullet_sprite) {
+        printf("Erro: Tiro ou sprite do tiro nulo.\n");
+        return;
+    }
 
-    // Desenha o tiro com o sprite fornecido
+    // Desenhar a bala na posição correta
     al_draw_bitmap(
-        bullet_sprite, 
-        shot->x - al_get_bitmap_width(bullet_sprite) / 2,  // Centraliza em X
-        shot->y - al_get_bitmap_height(bullet_sprite) / 2, // Centraliza em Y
+        bullet_sprite,
+        shot->x - al_get_bitmap_width(bullet_sprite) / 2,
+        shot->y - al_get_bitmap_height(bullet_sprite) / 2,
         0
     );
 }
@@ -54,7 +70,6 @@ void boss_shot_draw(boss_shot *shot, ALLEGRO_BITMAP *bullet_sprite) {
 void boss_shot_destroy(boss_shot *shot) {
     if (shot != NULL) {
         // Debug: Verifique quando um tiro é destruído
-        printf("Destruindo tiro na posição: (%.2d, %.2d)\n", shot->x, shot->y);
 
         free(shot);
     }

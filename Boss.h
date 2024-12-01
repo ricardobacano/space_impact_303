@@ -12,7 +12,11 @@
 #define BOSS_MAX_HP 300
 #define BOSS_SHOT_COOLDOWN 100  // Tempo de recarga entre os disparos do boss
 #define BOSS_SHOT_RATE 10       // Número de frames entre cada disparo enquanto ele está atirando
-#define BOSS_MOVE_SPEED 0.8       // Velocidade de movimento vertical do boss
+#define BOSS_MOVE_SPEED 0.7       // Velocidade de movimento vertical do boss
+#define FAST_SHOT_SPEED 10    // Velocidade para tiros rápidos (reta)
+#define SPLIT_SHOT_SPEED 5    // Velocidade para tiros bumerangue (frente e volta)
+#define SPLIT_SHOT_RETURN_DISTANCE 100 // Distância para bumerangue retornar
+
 
 // Estrutura do Boss
 typedef struct Boss {
@@ -20,6 +24,7 @@ typedef struct Boss {
     float x, y;              // Posição do boss
     unsigned int hp;         // Vida do boss
     unsigned int cooldown;   // Tempo de espera entre fases de disparo
+    int next_shot_type;
     boss_shot *shots;        // Lista encadeada de tiros do boss
     HealthBar *health_bar;   // Barra de vida do boss
     ALLEGRO_BITMAP *sprite;  // Sprite do boss
@@ -32,9 +37,11 @@ Boss* create_boss(float x, float y, ALLEGRO_BITMAP *sprite);
 void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite);
 void update_boss(Boss *boss, square *player);
 void destroy_boss(Boss *boss);         // Função para destruir o Boss e liberar a memória
-void draw_boss(Boss *boss);            // Função para desenhar o Boss na tela
+void draw_boss(Boss *boss, bool debug_mode);
 void check_boss_collision_with_player(square *player, Boss *boss);  // Função para verificar colisões com o jogador
 int update_boss_shooting(Boss *boss, int frame_count, int shoot_pattern, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite);
-
+void update_boss_shots(Boss *boss);
+int check_collision(float x1, float y1, float width1, float height1, float x2, float y2, float width2, float height2);
+void check_player_bullets_with_boss_shots(square *player, Boss *boss);
 
 #endif
