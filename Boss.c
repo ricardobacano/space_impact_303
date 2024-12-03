@@ -14,10 +14,8 @@ Boss* create_boss(float x, float y, ALLEGRO_BITMAP *sprite) {
     new_boss->hp = BOSS_MAX_HP;
     new_boss->cooldown = BOSS_SHOT_COOLDOWN;
     new_boss->shots = NULL;
-    new_boss->direction = 1;  // Inicialmente, o boss vai se mover para baixo
-
-    // Cria a barra de vida fixa no topo da tela
-    new_boss->health_bar = healthbar_create(X_SCREEN - 130, 20, new_boss->hp);  // Coloca a barra no topo e define o valor máximo de HP
+    new_boss->direction = 1;  
+    new_boss->health_bar = healthbar_create(X_SCREEN - 130, 20, new_boss->hp);  
     new_boss->sprite = sprite; 
 
     return new_boss;
@@ -27,11 +25,9 @@ Boss* create_boss(float x, float y, ALLEGRO_BITMAP *sprite) {
 void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite) {
     if (boss == NULL) return;
 
-    static int alternate_shot = 0; // Variável estática para alternar entre os tiros
-
+    static int alternate_shot = 0; 
     if (boss->cooldown == 0) {
         if (alternate_shot == 0) {
-            // Tiro rápido
             boss_shot *new_fast_bullet = boss_shot_create(boss->x - BOSS_WIDTH / 2, boss->y, BOSS_SHOT_TYPE_FAST, 20);
             if (new_fast_bullet) {
                 new_fast_bullet->next = boss->shots;
@@ -39,7 +35,6 @@ void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *
                 new_fast_bullet->sprite = fast_bullet_sprite;
             }
         } else {
-            // Tiro bumerangue
             boss_shot *new_boomerang_bullet = boss_shot_create(boss->x - BOSS_WIDTH / 2, boss->y, BOSS_SHOT_TYPE_SPLIT, 20);
             if (new_boomerang_bullet) {
                 new_boomerang_bullet->next = boss->shots;
@@ -48,10 +43,9 @@ void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *
             }
         }
 
-        // Alterna para o próximo tipo de tiro
         alternate_shot = 1 - alternate_shot;
 
-        boss->cooldown = BOSS_SHOT_COOLDOWN;  // Reinicia o cooldown após atirar
+        boss->cooldown = BOSS_SHOT_COOLDOWN;  
     }
 }
 
@@ -59,7 +53,6 @@ void boss_shoot(Boss *boss, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *
 int update_boss_shooting(Boss *boss, int frame_count, int shoot_pattern, ALLEGRO_BITMAP *fast_bullet_sprite, ALLEGRO_BITMAP *slow_bullet_sprite) {
     if (!boss) return shoot_pattern;
 
-    // Alterna padrão de disparo a cada 150 frames
     if (frame_count % 150 == 0) {
         shoot_pattern = (shoot_pattern == 1) ? 2 : 1;
     }
@@ -82,7 +75,6 @@ int update_boss_shooting(Boss *boss, int frame_count, int shoot_pattern, ALLEGRO
 void update_boss(Boss *boss, square *player) {
     if (boss == NULL || player == NULL) return;
 
-    // Calcular a diferença entre a posição do boss e a do jogador
     float delta_x = player->x - boss->x;
     float delta_y = player->y - boss->y;
 
@@ -91,16 +83,13 @@ void update_boss(Boss *boss, square *player) {
 
     // Evitar que o boss se mova a uma velocidade superior à distância
     if (distance != 0) {
-        // Normalizar a direção
         float direction_x = delta_x / distance;
         float direction_y = delta_y / distance;
 
-        // Mover o boss na direção do jogador
         boss->x += direction_x * BOSS_MOVE_SPEED;
         boss->y += direction_y * BOSS_MOVE_SPEED;
     }
 
-    // Verifica se o boss está dentro dos limites da tela
     if (boss->x < 0) boss->x = 0;
     if (boss->x > X_SCREEN) boss->x = X_SCREEN;
     if (boss->y < 0) boss->y = 0;
@@ -111,11 +100,10 @@ void update_boss(Boss *boss, square *player) {
 void draw_boss(Boss *boss, bool debug_mode) {
     if (!boss || !boss->sprite) return;
 
-    // Desenha o sprite do Boss
     al_draw_bitmap(
         boss->sprite,
-        boss->x - al_get_bitmap_width(boss->sprite) / 2,  // Centraliza em X
-        boss->y - al_get_bitmap_height(boss->sprite) / 2, // Centraliza em Y
+        boss->x - al_get_bitmap_width(boss->sprite) / 2,  
+        boss->y - al_get_bitmap_height(boss->sprite) / 2, 
         0
     );
 
@@ -147,35 +135,29 @@ void update_boss_shots(Boss *boss) {
     boss_shot *prev = NULL;
 
     while (current != NULL) {
-        // Atualiza a posição do tiro
         boss_shot_move(current);
 
-        // Remove o tiro se sair da tela ou concluir o movimento de bumerangue
         if (current->x < 0 || current->x > X_SCREEN) {
-            if (prev == NULL) { // Removendo o primeiro tiro
+            if (prev == NULL) { 
                 boss->shots = current->next;
-            } else { // Removendo um tiro no meio ou no final
+            } else { 
                 prev->next = current->next;
             }
 
             boss_shot *to_remove = current;
             current = current->next;
-            boss_shot_destroy(to_remove); // Libera a memória
+            boss_shot_destroy(to_remove); 
         } else {
-            // Avança para o próximo tiro
             prev = current;
             current = current->next;
         }
     }
 }
 
-
-
 // Função para destruir o Boss e liberar a memória alocada
 void destroy_boss(Boss *boss) {
     if (boss == NULL) return;
 
-    // Destruir os tiros do Boss
     boss_shot *current_shot = boss->shots;
     while (current_shot != NULL) {
         boss_shot *next_bullet = current_shot->next;
@@ -183,28 +165,24 @@ void destroy_boss(Boss *boss) {
         current_shot = next_bullet;
     }
 
-    // Destruir a barra de vida
     healthbar_destroy(boss->health_bar);
 
     free(boss);
 }
 
-// Função para verificar colisão do Boss com o jogador
 void check_boss_collision_with_player(square *player, Boss *boss) {
     if (boss == NULL || player == NULL) return;
 
-    // Verifica se há colisão do jogador com o boss
     if ((player->x + player->side / 2 >= boss->x - BOSS_WIDTH / 2) &&
         (player->x - player->side / 2 <= boss->x + BOSS_WIDTH / 2) &&
         (player->y + player->side / 2 >= boss->y - BOSS_HEIGHT / 2) &&
         (player->y - player->side / 2 <= boss->y + BOSS_HEIGHT / 2)) {
 
-        int damage = 30;  // Dano causado pela colisão com o boss
+        int damage = 10;  
 
         if (player->shield && player->shield->is_active) {
             printf("Escudo ativo! Dano recebido: %d\n", damage);
 
-            // Aplica dano ao escudo
             if (player->shield->hp > damage) {
                 player->shield->hp -= damage;
             } else {
@@ -213,11 +191,9 @@ void check_boss_collision_with_player(square *player, Boss *boss) {
                 player->shield->is_active = false;
                 printf("Escudo destruído! Excesso de dano: %d\n", excess_damage);
 
-                // Aplica o excesso de dano ao HP do jogador
                 player->hp -= excess_damage;
             }
         } else {
-            // Se o escudo não estiver ativo
             player->hp -= damage;
             printf("Jogador tomou dano! HP restante: %d\n", player->hp);
         }
@@ -243,11 +219,9 @@ void check_player_bullets_with_boss_shots(square *player, Boss *boss) {
         prev_boss_bullet = NULL;
 
         while (boss_bullet != NULL) {
-            // Verifica colisão
-            if (check_collision(player_bullet->x, player_bullet->y, 10, 10,  // Supondo que o tamanho das balas do jogador seja 10x10
-                                boss_bullet->x, boss_bullet->y, 20, 20)) {  // Tamanho das balas do boss
-                if (boss_bullet->type == BOSS_SHOT_TYPE_SPLIT) {  // Apenas para tiros de bumerangue
-                    // Remove o tiro do boss
+            if (check_collision(player_bullet->x, player_bullet->y, 10, 10,  
+                                boss_bullet->x, boss_bullet->y, 20, 20)) {  
+                if (boss_bullet->type == BOSS_SHOT_TYPE_SPLIT) {  
                     if (prev_boss_bullet == NULL) {
                         boss->shots = boss_bullet->next;
                     } else {
@@ -255,7 +229,6 @@ void check_player_bullets_with_boss_shots(square *player, Boss *boss) {
                     }
                     boss_shot_destroy(boss_bullet);
 
-                    // Remove o tiro do jogador
                     if (prev_player_bullet == NULL) {
                         player->gun->shots = player_bullet->next;
                     } else {
@@ -263,7 +236,7 @@ void check_player_bullets_with_boss_shots(square *player, Boss *boss) {
                     }
                     bullet_destroy(player_bullet);
 
-                    return; // Sai da verificação após destruir o par
+                    return; 
                 }
             }
             prev_boss_bullet = boss_bullet;
@@ -274,31 +247,26 @@ void check_player_bullets_with_boss_shots(square *player, Boss *boss) {
     }
 }
 
-// Função para lidar com colisões do jogador com o Boss
+// Função de colisões do jogador com o Boss
 void check_player_bullets_with_boss(square *player, Boss *boss) {
     if (!player || !boss) return;
 
     bullet *current_bullet = player->gun->shots;
     bullet *prev_bullet = NULL;
 
-    // Pegue as dimensões do Boss
     float boss_x = boss->x - BOSS_WIDTH / 2;
     float boss_y = boss->y - BOSS_HEIGHT / 2;
     float boss_width = BOSS_WIDTH;
     float boss_height = BOSS_HEIGHT;
 
     while (current_bullet != NULL) {
-        // Verifica se a bala do jogador colide com o Boss
-        if (check_collision(current_bullet->x, current_bullet->y, 10, 10, // Dimensões da bala do jogador
+        if (check_collision(current_bullet->x, current_bullet->y, 10, 10, 
                             boss_x, boss_y, boss_width, boss_height)) {
 
-            // Diminua a vida do Boss
             boss->hp -= current_bullet->damage;
 
-            // Atualize a barra de vida do Boss
             healthbar_update(boss->health_bar, boss->hp);
 
-            // Remove a bala do jogador
             if (prev_bullet == NULL) {
                 player->gun->shots = current_bullet->next;
             } else {
@@ -307,9 +275,8 @@ void check_player_bullets_with_boss(square *player, Boss *boss) {
 
             bullet *to_remove = current_bullet;
             current_bullet = current_bullet->next;
-            bullet_destroy(to_remove); // Libera a memória da bala
+            bullet_destroy(to_remove); 
         } else {
-            // Avança para o próximo tiro
             prev_bullet = current_bullet;
             current_bullet = current_bullet->next;
         }
@@ -329,16 +296,14 @@ void check_boss_bullets_with_player(square *player, Boss *boss) {
     float player_height = player->side;
 
     while (current_shot != NULL) {
-        // Verifica se o tiro do Boss colide com o jogador
-        if (check_collision(current_shot->x, current_shot->y, 10, 10, // Dimensões do tiro do Boss
+        if (check_collision(current_shot->x, current_shot->y, 10, 10, 
                             player_x, player_y, player_width, player_height)) {
 
-            int damage = current_shot->damage;  // Dano do tiro do Boss
+            int damage = current_shot->damage; 
 
             if (player->shield && player->shield->is_active) {
                 printf("Escudo ativo! Dano recebido: %d\n", damage);
 
-                // Aplica dano ao escudo
                 if (player->shield->hp > damage) {
                     player->shield->hp -= damage;
                 } else {
@@ -347,16 +312,13 @@ void check_boss_bullets_with_player(square *player, Boss *boss) {
                     player->shield->is_active = false;
                     printf("Escudo destruído! Excesso de dano: %d\n", excess_damage);
 
-                    // Aplica o excesso de dano ao HP do jogador
                     player->hp -= excess_damage;
                 }
             } else {
-                // Se o escudo não estiver ativo
                 player->hp -= damage;
                 printf("Jogador tomou dano! HP restante: %d\n", player->hp);
             }
 
-            // Remove o tiro do Boss
             if (prev_shot == NULL) {
                 boss->shots = current_shot->next;
             } else {
@@ -365,9 +327,8 @@ void check_boss_bullets_with_player(square *player, Boss *boss) {
 
             boss_shot *to_remove = current_shot;
             current_shot = current_shot->next;
-            boss_shot_destroy(to_remove); // Libera a memória do tiro
+            boss_shot_destroy(to_remove); 
         } else {
-            // Avança para o próximo tiro
             prev_shot = current_shot;
             current_shot = current_shot->next;
         }

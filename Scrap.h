@@ -12,6 +12,7 @@ typedef struct Scrap {
 Scrap* create_scrap(float x, float y);
 void move_scrap(Scrap *head, float speed);
 void draw_scrap(Scrap *head, ALLEGRO_BITMAP* scrap_sprite);
+unsigned char check_collision_with_scrap(float x, float y, Scrap *scrap_list);
 void destroy_scrap(Scrap *scrap);
 void destroy_all_scrap(Scrap *head);
 void scrap_count_draw(int scrap_count); 

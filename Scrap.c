@@ -33,6 +33,22 @@ void draw_scrap(Scrap *head, ALLEGRO_BITMAP* scrap_sprite) {
 }
 
 
+unsigned char check_collision_with_scrap(float x, float y, Scrap *scrap_list) {
+    Scrap *current = scrap_list;
+    while (current != NULL) {
+        // Verifica se a distância entre as duas sucatas é menor que 20 (ajustável)
+        float distance_x = current->x - x;
+        float distance_y = current->y - y;
+        float distance_squared = distance_x * distance_x + distance_y * distance_y;
+
+        if (distance_squared < 400) {  // Raio de 20 pixels
+            return 1; // Colisão encontrada
+        }
+
+        current = current->next;
+    }
+    return 0; // Sem colisão
+}
 
 void scrap_count_draw(int scrap_count) {
     // Desenha o contador de sucata na tela, ao lado da barra de vida

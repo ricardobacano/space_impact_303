@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <allegro5/allegro_primitives.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "Enemy.h"
 #include "ShooterEnemy.h"
@@ -216,10 +217,19 @@ unsigned char check_collision_with_enemies(float x, float y, Enemy *enemies) {
     while (current_enemy != NULL) {
         if ((x >= current_enemy->x - 20 && x <= current_enemy->x + 20) &&
             (y >= current_enemy->y - 20 && y <= current_enemy->y + 20)) {
-            return 1; 
+            return 1; // Colisão encontrada
         }
         current_enemy = current_enemy->next;
     }
-    return 0;  
+    return 0; // Sem colisão
 }
 
+unsigned char check_collision_between_all_enemies(float x, float y, Enemy *enemies, ShooterEnemy *shooter_enemies) {
+    if (check_collision_with_enemies(x, y, enemies)) {
+        return 1; // Colisão com inimigos normais
+    }
+    if (check_collision_with_shooter_enemies(x, y, shooter_enemies)) {
+        return 1; // Colisão com inimigos atiradores
+    }
+    return 0; // Sem colisão
+}

@@ -222,11 +222,11 @@ unsigned char check_collision_with_shooter_enemies(float x, float y, ShooterEnem
         float distance_y = current->y - y;
         float distance_squared = distance_x * distance_x + distance_y * distance_y;
 
-        if (distance_squared < 400) {
-            return 1; 
+        if (distance_squared < 400) { // Evita criação se estiver muito próximo
+            return 1; // Colisão encontrada
         }
     }
-    return 0;  
+    return 0; 
 }
 
 void move_shooter_bullets(ShooterEnemy *head, square *player) {

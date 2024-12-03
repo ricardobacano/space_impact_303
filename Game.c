@@ -25,6 +25,7 @@
 #include "BossShot.h"
 #include "Laser.h"
 #include "IntroScreen.h"
+#include "BossAppearance.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -44,7 +45,7 @@ int main() {
     al_init_font_addon();
     al_init_acodec_addon(); 
 
-    srand(time(NULL));  // Semente para valores aleatórios baseada no tempo
+    srand(time(NULL));  
 
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
     ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
@@ -105,19 +106,19 @@ int main() {
     ALLEGRO_BITMAP *boss_sprite = al_load_bitmap("./imagens/boss_limpo.png");
     if (!boss_sprite) {
         fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
-        return -1; // Saia do programa se o sprite não puder ser carregado
+        return -1; 
     }
 
     ALLEGRO_BITMAP *shot1_boss = al_load_bitmap("./imagens/tiroboss2_limpo.png");
     if (!shot1_boss) {
         fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
-        return -1; // Saia do programa se o sprite não puder ser carregado
+        return -1;
     }
 
     ALLEGRO_BITMAP *shot2_boss = al_load_bitmap("./imagens/roundaboud.png");
     if (!shot2_boss) {
         fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
-        return -1; // Saia do programa se o sprite não puder ser carregado
+        return -1;
     }
 
     ALLEGRO_DISPLAY* disp = al_create_display(X_SCREEN, Y_SCREEN);
@@ -145,7 +146,7 @@ int main() {
     ShooterEnemy* shooter_enemies = NULL;
 
     Laser *laser = laser_create(0, LASER_WIDTH, LASER_SPEED, LASER_DAMAGE);
-    bool laser_ready = true;  // O laser começa pronto para ser usado
+    bool laser_ready = true;  
     float laser_cooldown_timer = 0; 
 
     Scrap *scrap_list = NULL;
@@ -154,13 +155,18 @@ int main() {
     int shoot_pattern = 1;
  
     Boss *boss = NULL;
+    float boss_appearance_timer = 0.0f; 
+    float boss_appearance_duration = 2.0f; 
+    bool is_boss_surfacing = false;
+
 
     Explosion *explosions = NULL;
+    float delta_time = 0.0;
 
     ALLEGRO_EVENT event;
     al_start_timer(timer);
     unsigned char p1k = 0;
-    bool is_paused = false;  // Variável para controlar se o jogo está em pausa
+    bool is_paused = false; 
     bool is_double_speed = false;  
     bool debug_mode = false;
 
@@ -192,13 +198,15 @@ int main() {
                     if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
                         boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
                         printf("Boss apareceu!\n");
+                        is_boss_surfacing = true;
+                        boss_appearance_timer = 0.0f;
                     }
-                    if (event.keyboard.keycode == ALLEGRO_KEY_L) { // 'L' para ativar o laser
+                    if (event.keyboard.keycode == ALLEGRO_KEY_L) { 
                         if (power_up_stage >= 2 && laser_ready) {  
                             if (!laser->is_active) {
                                 activate_laser(laser);
                                 printf("Laser ativado!\n");
-                                laser_ready = false;  // Marca que o laser está em cooldown
+                                laser_ready = false;  
                                 laser_cooldown_timer = LASER_COOLDOWN;
                             }
                         } else {
@@ -260,8 +268,7 @@ int main() {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN); 
 
-                        if (!check_collision_with_enemies(new_x, new_y, enemies) &&
-                            !check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
+                        if (!check_collision_between_all_enemies(new_x, new_y, enemies, shooter_enemies)) {
                             Enemy *new_enemy = create_enemy(new_x, new_y, 35.0f, 35.0f, 20); 
                             if (new_enemy) {
                                 new_enemy->next = enemies;
@@ -270,12 +277,11 @@ int main() {
                         }
                     }
 
-                    if (boss == NULL && rand() % 200 == 0) {  // Chance de criar um inimigo atirador
+                    if (boss == NULL && rand() % 200 == 0) {  
                     float new_x = X_SCREEN;
                     float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);  
 
-                    // Verifica se não colide com outros inimigos
-                    if (!check_collision_with_shooter_enemies(new_x, new_y, shooter_enemies)) {
+                    if (!check_collision_between_all_enemies(new_x, new_y, enemies, shooter_enemies)) {
                         ShooterEnemy *new_enemy = create_shooter_enemy(new_x, new_y, 30);  
                         if (new_enemy) {
                             new_enemy->next = shooter_enemies;
@@ -284,15 +290,17 @@ int main() {
                         }
                     }
 
-                    if (rand() % 10 == 0) {
+                    if (rand() % 5 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
-                        Scrap *new_scrap = create_scrap(new_x, new_y);
-                        if (new_scrap) {
-                            new_scrap->next = scrap_list;
-                            scrap_list = new_scrap;
-                        }
+                        if (!check_collision_with_scrap(new_x, new_y, scrap_list)) {
+                            Scrap *new_scrap = create_scrap(new_x, new_y);
+                                if (new_scrap) {
+                                    new_scrap->next = scrap_list;
+                                    scrap_list = new_scrap;
+                            }
+                        }  
                     }
 
                     char power_up_message[50] = "";  
@@ -304,7 +312,6 @@ int main() {
 
                         if (power_up_stage > 3) power_up_stage = 3;  
 
-                        // mensagem de a power-up desbloqueado
                         switch (power_up_stage) {
                             case 1:
                                 snprintf(power_up_message, sizeof(power_up_message), "ESCUDO CONSTRUIDO!");
@@ -327,10 +334,10 @@ int main() {
                     }
 
                     if (!laser_ready) {
-                        laser_cooldown_timer -= 1.0 / 30.0;  // Reduz o cooldown baseado no timer (30 FPS)
+                        laser_cooldown_timer -= 1.0 / 30.0;  
                         if (laser_cooldown_timer <= 0) {
-                            laser_ready = true;  // Quando o cooldown chega a zero, o laser está pronto
-                            laser_cooldown_timer = 0;  // Garante que não fique negativo
+                            laser_ready = true;  
+                            laser_cooldown_timer = 0;  
                             printf("Laser pronto para uso!\n");
                         }
                     }
@@ -349,7 +356,7 @@ int main() {
 
                     
 
-                    float delta_time = 5.0 / 30.0;
+                    delta_time = 5.0 / 30.0;
 
                     update_position(player_1);
                     update_bullets(player_1);
@@ -361,6 +368,7 @@ int main() {
                     update_boss(boss,player_1);
                     shoot_pattern = update_boss_shooting(boss, frame_count, shoot_pattern, shot1_boss, shot2_boss);
                     laser_update(laser);
+
 
                     move_shooter_bullets(shooter_enemies, player_1);
                     move_scrap(scrap_list, enemy_speed);
@@ -384,24 +392,18 @@ int main() {
                 }
 
                 if (boss != NULL) {
-                    // Alterna o padrão de tiro a cada 150 frames
                     if (frame_count % 150 == 0) {
                         shoot_pattern = (shoot_pattern == 1) ? 2 : 1;
                     }
 
-                    // Disparo baseado no padrão
                     if (shoot_pattern == 1 && boss->cooldown == 0) {
-                        // Tiro bumerangue
-                        boss_shoot(boss, shot1_boss, shot2_boss); // Bumerangue como tipo principal
+                        boss_shoot(boss, shot1_boss, shot2_boss);
                     } else if (shoot_pattern == 2 && boss->cooldown == 0) {
-                        // Tiro reto
-                        boss_shoot(boss, shot2_boss, shot1_boss); // Reto como tipo principal
+                        boss_shoot(boss, shot2_boss, shot1_boss);
                     }
 
-                    // Atualiza os tiros do Boss
                     update_boss_shots(boss);
 
-                    // Desenha os tiros do Boss
                     boss_shot *current_shot = boss->shots;
                     while (current_shot != NULL) {
                         boss_shot_draw(current_shot, current_shot->sprite);
@@ -467,8 +469,8 @@ int main() {
 
                 laser_draw(laser);
 
+
                 for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
-                    // Centraliza o sprite do projétil na posição do projétil
                     al_draw_bitmap(bullet_sprite, index->x - al_get_bitmap_width(bullet_sprite) / 2, 
                                 index->y - al_get_bitmap_height(bullet_sprite) / 2, 0);
                 }
@@ -484,9 +486,18 @@ int main() {
                     }
                 }
 
+                if (is_boss_surfacing) {
+                    boss_appearance_timer += delta_time;
 
-                if (boss != NULL) {
+                    draw_boss_appearance(boss_sprite, boss_appearance_timer / boss_appearance_duration, X_SCREEN, Y_SCREEN);
+
+                    if (boss_appearance_timer >= boss_appearance_duration) {
+                        is_boss_surfacing = false; 
+                    }
+                } else if (boss != NULL) {
+                
                     draw_boss(boss, debug_mode);
+                    update_boss(boss, player_1);
                 }
 
 
@@ -534,6 +545,8 @@ int main() {
     square_destroy(player_1);
     al_destroy_bitmap(boss_sprite);
     joystick_destroy(player_1->control);
-    
+    shieldbar_destroy(player_1_shieldbar);
+    shield_destroy(player_1->shield);
+
     return 0;
 }

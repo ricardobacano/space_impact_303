@@ -6,6 +6,7 @@
 #include "Score.h"
 #include "Explosion.h"
 #include "Shield.h"
+#include "ShooterEnemy.h"
 
 typedef struct Enemy {
     float x, y;            
@@ -25,5 +26,6 @@ void destroy_all_enemies(Enemy **head);
 void check_collision_with_player(square *player, Enemy **enemies);
 unsigned char check_kill(square *player, Enemy **enemies, Score *score, Explosion **explosions);
 unsigned char check_collision_with_enemies(float x, float y, Enemy *enemies);
+unsigned char check_collision_between_all_enemies(float x, float y, Enemy *enemies, ShooterEnemy *shooter_enemies);
 
 #endif  

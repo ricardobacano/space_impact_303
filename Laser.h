@@ -12,7 +12,7 @@
 #define LASER_SPEED 10.0         // Velocidade de movimento do laser
 #define LASER_WIDTH 20          // Largura do laser
 #define LASER_DAMAGE 20         // Dano causado pelo laser
-#define LASER_COOLDOWN 10.0
+#define LASER_COOLDOWN 15.0
 
 // Estrutura do Laser
 typedef struct Laser {

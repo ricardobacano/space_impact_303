@@ -17,6 +17,7 @@ void score_increment(Score *score, int value) {
     }
 }
 
+
 void score_draw(Score *score) {
     if (score) {
         ALLEGRO_FONT* font = al_create_builtin_font();
@@ -32,3 +33,4 @@ void score_destroy(Score *score) {
         free(score);  
     }
 }
+
