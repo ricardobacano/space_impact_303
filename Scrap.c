@@ -22,13 +22,10 @@ void move_scrap(Scrap *head, float speed) {
 
 void draw_scrap(Scrap *head, ALLEGRO_BITMAP* scrap_sprite) {
     for (Scrap *current = head; current != NULL; current = current->next) {
-        // Desenha o sprite redimensionado na posição da sucata
         al_draw_scaled_bitmap(scrap_sprite, 
-                              0, 0, 
-                              al_get_bitmap_width(scrap_sprite), al_get_bitmap_height(scrap_sprite), 
-                              current->x - 10, current->y - 10,  // Posição centralizada
-                              25, 25,  // Tamanho desejado da sucata
-                              0);
+                              0, 0, al_get_bitmap_width(scrap_sprite), 
+                              al_get_bitmap_height(scrap_sprite), current->x - 10, current->y - 10, 
+                              25, 25, 0); // se quiser aumentar o tamanho
     }
 }
 
@@ -36,30 +33,30 @@ void draw_scrap(Scrap *head, ALLEGRO_BITMAP* scrap_sprite) {
 unsigned char check_collision_with_scrap(float x, float y, Scrap *scrap_list) {
     Scrap *current = scrap_list;
     while (current != NULL) {
-        // Verifica se a distância entre as duas sucatas é menor que 20 (ajustável)
         float distance_x = current->x - x;
         float distance_y = current->y - y;
-        float distance_squared = distance_x * distance_x + distance_y * distance_y;
+        float distance_square = distance_x * distance_x + distance_y * distance_y;
 
-        if (distance_squared < 400) {  // Raio de 20 pixels
-            return 1; // Colisão encontrada
+        if (distance_square < 400) {  // aprox 20 pixeis
+            return 1; 
         }
 
         current = current->next;
     }
-    return 0; // Sem colisão
+    return 0; 
 }
 
 void scrap_count_draw(int scrap_count) {
-    // Desenha o contador de sucata na tela, ao lado da barra de vida
     ALLEGRO_FONT *font = al_create_builtin_font();
     char scrap_text[20];
-    al_draw_text(font, al_map_rgb(200, 200, 200), 10, 50, 0, scrap_text);  // Exibe ao lado da barra de vida
+    al_draw_text(font, al_map_rgb(200, 200, 200), 10, 50, 0, scrap_text);  
     al_destroy_font(font);
 }
 
 void destroy_scrap(Scrap *scrap) {
-    if (scrap) free(scrap);
+    if (scrap) {
+        free(scrap);
+    }
 }
 
 void destroy_all_scrap(Scrap *head) {

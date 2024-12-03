@@ -6,8 +6,14 @@ typedef struct {
 } Score;
 
 Score* score_create();  
+
+// incrementa a quantidade de score
 void score_increment(Score *score, int value);  
-void score_draw(Score *score);  
+
+// desenha o score na tela 
+void score_draw(Score *score); 
+
+// destroi a lista de score 
 void score_destroy(Score *score);  
 
 #endif 

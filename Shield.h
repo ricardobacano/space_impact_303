@@ -7,25 +7,35 @@
 
 typedef struct {
     bool is_active;
-    float duration;     // Duração do escudo em segundos
-    float start_time;   // Tempo em que o escudo foi ativado
-    float cooldown;     // Tempo de espera entre ativações
-    float last_used_time;   // Última vez em que o escudo foi ativado
-    float hp;               // HP atual do escudo
-    float max_hp;           // HP máximo do escudo
+    float duration;     
+    float start_time;   
+    float cooldown;     
+    float last_used_time;   
+    float hp;               
+    float max_hp;          
 } Shield;
 
 #define SHIELD_COOLDOWN 10.0f
 #define SHIELD_DURATION 15
-#define SHIELD_RADIUS_OFFSET 15.0f // Aumenta o tamanho do escudo em relação ao jogador
+#define SHIELD_RADIUS_OFFSET 15.0f 
 
-// Funções do escudo
 Shield* shield_create(float max_hp);
+
+// ativar o escudo 
 void shield_activate(Shield *shield);
+
+// shield tomou dano
 void shield_take_damage(Shield *shield, float damage);
+
+// atualiza o shield (se tomou dano ou esta inativo)
 void shield_update(Shield *shield, float current_time);
+
+// desenho do escudo (circulo)
 void shield_draw(Shield *shield, float player_x, float player_y, float player_radius);
+
+// desenha a barra de escudo na tela
 void shield_draw_bar(Shield *shield, ALLEGRO_FONT *font, float x, float y, float width, float height);
+
 void shield_destroy(Shield *shield);
 
 #endif // SHIELD_H

@@ -65,34 +65,34 @@ void square_shot(square *element) {
 void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image, bool debug_mode) {
     if (!player || !spaceship_image) return;
 
-    float scale_y = 1.0;  // Escala padrão
+    float scale_y = 1.0;  
     if (player->control->up) {
-        scale_y = 0.9;  // Diminuir altura ao subir
+        scale_y = 0.9;  
     } else if (player->control->down) {
-        scale_y = 1.1;  // Aumentar altura ao descer
+        scale_y = 1.1;  
     }
 
     // Desenho com escala
     al_draw_scaled_bitmap(
         spaceship_image,
         0, 0,                                     
-        al_get_bitmap_width(spaceship_image),     // Largura do bitmap
-        al_get_bitmap_height(spaceship_image),    // Altura do bitmap
-        player->x - (player->side / 2),           // Posição X (centralizada)
-        player->y - (player->side / 2 * scale_y), // Posição Y (ajustada pela escala)
-        player->side,                             // Nova largura
-        player->side * scale_y,                   // Nova altura (ajustada pela escala)
-        0                                         // Sem flags adicionais
+        al_get_bitmap_width(spaceship_image),    
+        al_get_bitmap_height(spaceship_image),    
+        player->x - (player->side / 2),           
+        player->y - (player->side / 2 * scale_y), 
+        player->side,                             
+        player->side * scale_y,                   
+        0                                         
     );
 
     if (debug_mode) {
         al_draw_rectangle(
-            player->x - player->side / 2, // Posição X (esquerda)
-            player->y - player->side / 2, // Posição Y (cima)
-            player->x + player->side / 2, // Posição X (direita)
-            player->y + player->side / 2, // Posição Y (baixo)
-            al_map_rgb(255, 0, 0),        // Cor (vermelho)
-            1                               // Espessura da linha
+            player->x - player->side / 2, 
+            player->y - player->side / 2, 
+            player->x + player->side / 2, 
+            player->y + player->side / 2, 
+            al_map_rgb(255, 0, 0),        
+            1                               
         );
     }
 }
@@ -153,7 +153,11 @@ void update_bullets(square *player) {
 
 void update_player_hp(square *player, int delta_hp) {
     player->hp += delta_hp;
-    if (player->hp > 100) player->hp = 100;  // Limita ao máximo
-    if (player->hp < 0) player->hp = 0;      // Evita valores negativos
+    if (player->hp > 100) {
+        player->hp = 100;  
+    }
+    if (player->hp < 0) {
+        player->hp = 0;      
+    }
     printf("HP do jogador atualizado para: %d\n", player->hp);
 }

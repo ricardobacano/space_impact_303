@@ -12,7 +12,7 @@ Shield* shield_create(float max_hp) {
     new_shield->duration = SHIELD_DURATION;
     new_shield->cooldown = SHIELD_COOLDOWN;
     new_shield->start_time = 0;
-    new_shield->last_used_time = -SHIELD_COOLDOWN; // Permite ativação inicial
+    new_shield->last_used_time = -SHIELD_COOLDOWN; // primeira ativação 
     new_shield->hp = max_hp;
     new_shield->max_hp = max_hp;
 
@@ -26,7 +26,7 @@ void shield_activate(Shield *shield) {
         shield->is_active = true;
         shield->start_time = current_time;
         shield->last_used_time = current_time;
-        shield->hp = shield->max_hp; // Reseta o HP do escudo ao ativar
+        shield->hp = shield->max_hp; // reseta o hp do escudo toda vez que ativa
         printf("Escudo ativado!\n");
     } else if (shield->is_active) {
         printf("Escudo já está ativo!\n");
@@ -52,18 +52,19 @@ void shield_take_damage(Shield *shield, float damage) {
 void shield_update(Shield *shield, float current_time) {
     if (shield->is_active && (current_time - shield->start_time >= shield->duration)) {
         shield->is_active = false;
-        printf("Escudo desativado! Agora em cooldown.\n");
+        printf("Escudo desativado! Em cooldown.\n");
     }
 }
 
 void shield_draw(Shield *shield, float player_x, float player_y, float player_radius) {
     if (shield->is_active) {
         float shield_radius = player_radius + SHIELD_RADIUS_OFFSET;
-        al_draw_circle(player_x, player_y, shield_radius, SHIELD_COLOR, 3); // Desenha o círculo
+        al_draw_circle(player_x, player_y, shield_radius, SHIELD_COLOR, 3); // desenho do circulo
     }
 }
 
 void shield_draw_bar(Shield *shield, ALLEGRO_FONT *font, float x, float y, float width, float height) {
+    
     float shield_fill = (shield->hp > 0) ? (shield->hp / shield->max_hp) * width : 0;
 
     al_draw_rectangle(x, y, x + width, y + height, al_map_rgb(255, 255, 255), 2);

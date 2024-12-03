@@ -127,7 +127,7 @@ int main() {
     al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_timer_event_source(timer));
 
-    show_intro_screen(disp, font, queue);
+    // show_intro_screen(disp, font, queue);
 
     background_init("./imagens/fundo_space.png");
     display_start_screen(disp, queue, font);
@@ -290,7 +290,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 5 == 0) {
+                    if (rand() % 100 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
@@ -550,3 +550,6 @@ int main() {
 
     return 0;
 }
+
+
+// 541	    al_destroy_bitmap(shooter_enemy_sprite); com erro
