@@ -18,7 +18,6 @@ typedef enum {
 } MenuOption;
 
 void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_FONT *font) {
-    // Inicializar o addon de imagens
     if (!al_init_image_addon()) {
         fprintf(stderr, "Falha ao inicializar addon de imagem!\n");
         exit(1);
@@ -33,41 +32,38 @@ void display_start_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, 
         exit(1);
     }
 
-    // Carregar a imagem de fundo
     ALLEGRO_BITMAP *background = al_load_bitmap("imagens/fundo.png");
     if (!background) {
         fprintf(stderr, "Falha ao carregar a imagem de fundo! Verifique o caminho e a existência do arquivo.\n");
         exit(1);
     }
 
-    // Obter dimensões da tela e da imagem
+    // pegar dimensões na tela 
     int display_width = al_get_display_width(display);
     int display_height = al_get_display_height(display);
     int background_width = al_get_bitmap_width(background);
     int background_height = al_get_bitmap_height(background);
 
-    // Calcular a posição para centralizar a imagem
+    // centralizar a imagem 
     float x_pos = (display_width - background_width) / 2;
     float y_pos = (display_height - background_height) / 2 - 50;
 
     al_clear_to_color(al_map_rgb(29, 36, 99));
     al_draw_bitmap(background, x_pos, y_pos, 0);
 
-    // Opções do menu
     MenuOption selected_option = MENU_START;
 
-    // Loop de navegação do menu
+    // loop para navegação no menu
     ALLEGRO_EVENT event;
     while (1) {
         
-        // Desenhando as opções do menu
+        // desenha as opções na tela
         al_draw_text(font, selected_option == MENU_START ? al_map_rgb(255, 0, 0) : al_map_rgb(255, 255, 255), display_width / 2, display_height / 2 + 90, ALLEGRO_ALIGN_CENTER, "Iniciar");
         al_draw_text(font, selected_option == MENU_CONTROLS ? al_map_rgb(255, 0, 0) : al_map_rgb(255, 255, 255), display_width / 2, display_height / 2 + 120, ALLEGRO_ALIGN_CENTER, "Controles");
         al_draw_text(font, selected_option == MENU_CREDITS ? al_map_rgb(255, 0, 0) : al_map_rgb(255, 255, 255), display_width / 2, display_height / 2 + 150, ALLEGRO_ALIGN_CENTER, "Créditos");
 
         al_flip_display();
 
-        // Aguardar evento
         al_wait_for_event(queue, &event);
 
         if (event.type == ALLEGRO_EVENT_KEY_DOWN) {

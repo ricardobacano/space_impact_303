@@ -247,7 +247,6 @@ void check_player_bullets_with_boss_shots(square *player, Boss *boss) {
     }
 }
 
-// Função de colisões do jogador com o Boss
 void check_player_bullets_with_boss(square *player, Boss *boss) {
     if (!player || !boss) return;
 
@@ -289,7 +288,7 @@ void check_boss_bullets_with_player(square *player, Boss *boss) {
     boss_shot *current_shot = boss->shots;
     boss_shot *prev_shot = NULL;
 
-    // Pegue as dimensões do jogador
+    // achar as dimensões do player
     float player_x = player->x - player->side / 2;
     float player_y = player->y - player->side / 2;
     float player_width = player->side;
@@ -302,7 +301,7 @@ void check_boss_bullets_with_player(square *player, Boss *boss) {
             int damage = current_shot->damage; 
 
             if (player->shield && player->shield->is_active) {
-                printf("Escudo ativo! Dano recebido: %d\n", damage);
+                printf("Escudo ativo! Dano recebido: %d\n", damage); // para debug
 
                 if (player->shield->hp > damage) {
                     player->shield->hp -= damage;
@@ -310,13 +309,13 @@ void check_boss_bullets_with_player(square *player, Boss *boss) {
                     int excess_damage = damage - player->shield->hp;
                     player->shield->hp = 0;
                     player->shield->is_active = false;
-                    printf("Escudo destruído! Excesso de dano: %d\n", excess_damage);
+                    printf("Escudo destruído! Excesso de dano: %d\n", excess_damage); // para debug
 
                     player->hp -= excess_damage;
                 }
             } else {
                 player->hp -= damage;
-                printf("Jogador tomou dano! HP restante: %d\n", player->hp);
+                printf("Jogador tomou dano! HP restante: %d\n", player->hp); // para debug
             }
 
             if (prev_shot == NULL) {

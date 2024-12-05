@@ -9,8 +9,8 @@ bullet_enemy* bullet_enemy_create(unsigned short x, unsigned short y, unsigned c
     new_bullet->y = y;
     new_bullet->damage = damage;
     new_bullet->type = type;
-    new_bullet->owner = owner;  // Indica se é do Boss ou do inimigo
-    new_bullet->direction = (type == 1) ? 1 : 0;  // Direção inicial: 1 para bumerangue, 0 para convencional
+    new_bullet->owner = owner;  
+    new_bullet->direction = (type == 1) ? 1 : 0;  
     new_bullet->next = NULL;
 
     return new_bullet;
@@ -27,13 +27,14 @@ void draw_bullets(bullet_enemy *bullets, ALLEGRO_BITMAP *enemy_bullet_sprite, AL
     }
 }
 
-
 void bullet_enemy_move(bullet_enemy *elements) {
     for (bullet_enemy *index = elements; index != NULL; index = index->next) {
-        index->x -= BULLET_ENEMY_MOVE;  // Move a bala para a esquerda
+        index->x -= BULLET_ENEMY_MOVE; 
     }
 }
 
 void bullet_enemy_destroy(bullet_enemy *element) {
-    free(element);  // Libera a memória do projétil
+    if (element != NULL) {
+        free(element); 
+    }
 }

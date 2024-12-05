@@ -10,8 +10,11 @@ typedef struct {
 	bullet *shots;																													
 } pistol;																														
 
-pistol* pistol_create();																										
+
+pistol* pistol_create();
+
 bullet* pistol_shot(unsigned short x, unsigned short y, unsigned char trajectory, pistol *gun);									
+
 void pistol_destroy(pistol *element);																							
 
 #endif																															

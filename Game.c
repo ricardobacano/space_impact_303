@@ -85,11 +85,27 @@ int main() {
         return -1;
     }
 
-    ALLEGRO_BITMAP* shooter_enemy_sprite = al_load_bitmap("./imagens/inimigo_2.png");
+    ALLEGRO_BITMAP* shooter_enemy_sprite = al_load_bitmap("./imagens/inimigo_f1_tiro.png");
     if (!shooter_enemy_sprite) {
         fprintf(stderr, "Erro ao carregar o sprite do inimigo atirador.\n");
         return -1;
     }
+
+     if (access("./imagens/inimigo_f1_tiro.png", F_OK) != 0) {
+        printf("Arquivo não encontrado!\n");
+    } else {
+        printf("Arquivo encontrado.\n");
+    }
+
+    if (!shooter_enemy_sprite) {
+        // Use al_get_errno() para obter mais informações sobre a falha
+        fprintf(stderr, "Erro ao carregar o sprite do inimigo atirador: %d\n", al_get_errno());
+        return -1;
+    } else {
+        printf("Sprite carregado com sucesso!\n");
+    }
+
+
 
     ALLEGRO_BITMAP* scrap_sprite = al_load_bitmap("./imagens/scrap.webp");
     if (!scrap_sprite) {
@@ -526,8 +542,10 @@ int main() {
     background_destroy();
     destroy_all_enemies(&enemies);
     destroy_all_shooter_enemies(shooter_enemies);
-    if (shooter_enemy_sprite) 
+    if (shooter_enemy_sprite) {
         al_destroy_bitmap(shooter_enemy_sprite);
+        shooter_enemy_sprite = NULL;  
+    }
     if (shooter_bullet_sprite) 
         al_destroy_bitmap(shooter_bullet_sprite);
 
@@ -536,9 +554,10 @@ int main() {
     score_destroy(score);
     al_destroy_font(font);
     al_destroy_display(disp);
-    al_destroy_bitmap(scrap_sprite);
+    if (scrap_sprite != NULL) {
+        al_destroy_bitmap(scrap_sprite);
+    }
     al_destroy_bitmap(enemy_sprite);
-    al_destroy_bitmap(shooter_enemy_sprite);
     al_destroy_timer(timer);
     al_destroy_bitmap(spaceship_image);
     al_destroy_event_queue(queue);

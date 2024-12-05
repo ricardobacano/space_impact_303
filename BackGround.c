@@ -5,7 +5,6 @@
 static ALLEGRO_BITMAP* background = NULL;
 static float background_x = 0;
 
-// Função para inicializar o fundo
 void background_init(const char* filepath) {
     background = al_load_bitmap(filepath);
     if (!background) {
@@ -14,7 +13,6 @@ void background_init(const char* filepath) {
     background_x = 0; 
 }
 
-// Função para atualizar a posição do fundo para dar a sensação de movimento
 void background_update(float speed) {
     background_x -= speed;  
     if (background_x <= -al_get_bitmap_width(background)) {
@@ -22,7 +20,6 @@ void background_update(float speed) {
     }
 }
 
-// Função para desenhar o fundo na tela
 void background_draw() {
     if (background) {
         al_draw_bitmap(background, background_x, 0, 0);

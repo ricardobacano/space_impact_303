@@ -20,7 +20,7 @@ void update_explosions(Explosion **explosions, float delta_time) {
     while (current != NULL) {
         current->duration -= delta_time;
 
-        // Remove a explosão se o tempo acabar
+        // remove a explosao se o tempo acabar
         if (current->duration <= 0) {
             if (previous) {
                 previous->next = current->next;

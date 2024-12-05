@@ -9,10 +9,7 @@
 void display_controls_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_FONT *font) {
     ALLEGRO_EVENT event;
 
-    // Limpar a tela com fundo preto (ou qualquer cor que preferir)
-    al_clear_to_color(al_map_rgb(0, 0, 0));  // Limpa a tela para a cor preta
-
-    // Desenhar o conteúdo da tela de controles aqui
+    al_clear_to_color(al_map_rgb(0, 0, 0)); 
 
     al_draw_text(font, al_map_rgb(255, 255, 255), al_get_display_width(display) / 2, al_get_display_height(display) / 2 - 120, ALLEGRO_ALIGN_CENTER, "Pressione 'ENTER' para voltar");
     al_draw_text(font, al_map_rgb(255, 255, 255), al_get_display_width(display) / 2, al_get_display_height(display) / 2 - 90, ALLEGRO_ALIGN_CENTER, "Controles");
@@ -25,9 +22,9 @@ void display_controls_screen(ALLEGRO_DISPLAY *display, ALLEGRO_EVENT_QUEUE *queu
     al_draw_text(font, al_map_rgb(255, 255, 255), al_get_display_width(display) / 2, al_get_display_height(display) / 2 + 120, ALLEGRO_ALIGN_CENTER, "Tecla L - Laser"); 
     al_draw_text(font, al_map_rgb(255, 255, 255), al_get_display_width(display) / 2, al_get_display_height(display) / 2 + 150, ALLEGRO_ALIGN_CENTER, "Tecla H - Ativar HitBoxes"); 
 
-    al_flip_display();  // Atualiza a tela para exibir o conteúdo desenhado
+    al_flip_display(); 
 
-    // Esperar por eventos
+    // loop de eventos
     while (1) {
         al_wait_for_event(queue, &event);
 

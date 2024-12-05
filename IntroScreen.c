@@ -8,10 +8,9 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
-#define SCROLL_SPEED 1.0  // Velocidade do texto subindo
+#define SCROLL_SPEED 1.0 
 
 void show_intro_screen(ALLEGRO_DISPLAY *display, ALLEGRO_FONT *font, ALLEGRO_EVENT_QUEUE *queue) {
-    // Texto da introdução
     const char *intro_text[] = {
         "Ha muito tempo, em uma galaxia distante,",
         "",
@@ -41,7 +40,7 @@ void show_intro_screen(ALLEGRO_DISPLAY *display, ALLEGRO_FONT *font, ALLEGRO_EVE
     };
 
     int line_count = sizeof(intro_text) / sizeof(intro_text[0]);
-    float text_y = SCREEN_HEIGHT;  // Começa abaixo da tela
+    float text_y = SCREEN_HEIGHT;  
 
     bool done = false;
     ALLEGRO_EVENT event;
@@ -49,29 +48,27 @@ void show_intro_screen(ALLEGRO_DISPLAY *display, ALLEGRO_FONT *font, ALLEGRO_EVE
     while (!done) {
         while (al_get_next_event(queue, &event)) {
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-                exit(0);  // Sai do jogo
+                exit(0); 
             }
         }
 
-        // Atualiza a posição do texto
+        // atualiza a posição do texto
         text_y -= SCROLL_SPEED;
 
-        // Se o texto terminou de passar pela tela, encerra a introdução
+        // se passou todo texto, encerra 
         if (text_y + line_count * 30 < 0) {
             done = true;
         }
 
-        // Desenha o fundo
         al_clear_to_color(al_map_rgb(0, 0, 0));
 
-        // Desenha o texto
         for (int i = 0; i < line_count; i++) {
             float line_x = SCREEN_WIDTH / 2;
-            float line_y = text_y + i * 30;  // Cada linha está 30px abaixo da anterior
+            float line_y = text_y + i * 30;  // cada linha esta 30px abaixo da anterior
             al_draw_text(font, al_map_rgb(255, 255, 0), line_x, line_y, ALLEGRO_ALIGN_CENTER, intro_text[i]);
         }
 
         al_flip_display();
-        al_rest(1.0 / 60.0);  // Controla a taxa de quadros
+        al_rest(1.0 / 60.0);  
     }
 }

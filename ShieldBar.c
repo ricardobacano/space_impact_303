@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include "ShieldBar.h"
 
-// Cor azul para a barra de escudo
 #define HEALTHBAR_HEIGHT 10.0
 
 ShieldBar* shieldbar_create(float x, float y, unsigned char max_shield) {
@@ -27,10 +26,10 @@ void shieldbar_draw(ShieldBar *bar) {
     float shield_ratio = (float) bar->current_shield / bar->max_shield;
     float current_width = SHIELDBAR_WIDTH * shield_ratio;
 
-    // Desenha o contorno da barra de escudo
+    // contorno da barra 
     al_draw_rectangle(bar->x, bar->y, bar->x + SHIELDBAR_WIDTH, bar->y + SHIELDBAR_HEIGHT, al_map_rgb(255, 255, 255), 1);
 
-    // Desenha a parte preenchida da barra de escudo
+    // barra preenchida
     al_draw_filled_rectangle(bar->x, bar->y, bar->x + current_width, bar->y + SHIELDBAR_HEIGHT, SHIELDBAR_COLOR);
 }
 
@@ -42,25 +41,22 @@ void draw_shield_timer(Shield *shield, ALLEGRO_FONT *font, float x, float y) {
     if (!shield || !font) return;
 
     if (shield->is_active) {
-        // Calcula o tempo restante do escudo
+        // calcula o tempo restante do escudo 
         float shield_time_remaining = shield->duration - (al_get_time() - shield->start_time);
 
         if (shield_time_remaining > 0) {
             char timer_text[50];
             snprintf(timer_text, 50, "Escudo ativo: %.1fs", shield_time_remaining);
-
-            // Desenha o texto do timer na posição especificada
-            al_draw_text(font, al_map_rgb(255, 255, 255), x, y, ALLEGRO_ALIGN_LEFT, timer_text);
         }
     } else {
-        // Exibe o tempo de cooldown restante, se aplicável
+        // exibir o tempo do cooldown
         float cooldown_time_remaining = shield->cooldown - (al_get_time() - shield->last_used_time);
 
         if (cooldown_time_remaining > 0) {
             char cooldown_text[50];
             snprintf(cooldown_text, 50, "Cooldown: %.1fs", cooldown_time_remaining);
 
-            // Desenha o texto do cooldown na posição especificada
+            // texto de cooldown
             al_draw_text(font, al_map_rgb(255, 0, 0), x, y, ALLEGRO_ALIGN_LEFT, cooldown_text);
         }
     }

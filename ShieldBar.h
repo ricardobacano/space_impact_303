@@ -19,11 +19,18 @@ typedef struct {
     unsigned char current_shield;
 } ShieldBar;
 
-// Funções para a ShieldBar
 ShieldBar* shieldbar_create(float x, float y, unsigned char max_shield);
+
+// atualização da barra de escudo (destruido, ativada e etc)
 void shieldbar_update(ShieldBar *bar, unsigned char current_shield);
+
+// desenho da barra de escudo
 void shieldbar_draw(ShieldBar *bar);
+
+// libera a memoria da barra de escudo
 void shieldbar_destroy(ShieldBar *bar);
+
+// timer de atualização da barra de escudo (cooldown e ativado)
 void draw_shield_timer(Shield *shield, ALLEGRO_FONT *font, float x, float y);
 
-#endif // SHIELDBAR_H
+#endif 

@@ -19,7 +19,6 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
     new_square->control = joystick_create();
     new_square->gun = pistol_create();
 
-    // Aloca e inicializa o escudo
     new_square->shield = (Shield*) malloc(sizeof(Shield));
     if (!new_square->shield) {
         free(new_square->control);
@@ -72,7 +71,7 @@ void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image, bool debug_mod
         scale_y = 1.1;  
     }
 
-    // Desenho com escala
+    // desenho com escala para movimentação
     al_draw_scaled_bitmap(
         spaceship_image,
         0, 0,                                     

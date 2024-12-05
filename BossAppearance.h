@@ -4,17 +4,23 @@
 #include <allegro5/allegro.h>
 
 typedef struct {
-    float x, y;             // Posição do boss
-    float scale;            // Escala do boss (para efeito de crescimento)
-    float opacity;          // Opacidade (para efeito de fade-in)
-    float duration;         // Duração total da animação
-    float elapsed_time;     // Tempo decorrido desde o início da animação
-    bool is_active;         // Indica se a animação está em andamento
+    float x, y;             
+    float scale;           
+    float opacity;          
+    float duration;        
+    float elapsed_time;     
+    bool is_active;         
 } BossAppearance;
 
 BossAppearance* create_boss_appearance(float x, float y, float duration);
+
+// atualização da animação
 void update_boss_appearance(BossAppearance *appearance, float delta_time);
+
+// desenha do boss (para utilizar na animação)
 void draw_boss_appearance(ALLEGRO_BITMAP *boss_sprite, float progress, int screen_width, int screen_height);
+
+// libera a memoria de animação (salva ponteiros)
 void destroy_boss_appearance(BossAppearance *appearance);
 
 #endif

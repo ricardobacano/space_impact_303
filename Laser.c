@@ -2,9 +2,8 @@
 #include <stdlib.h>
 
 #include "Laser.h"
-#include "Enemy.h"  // Para a estrutura e manipulação dos inimigos
-#include "Boss.h"    // Para a estrutura e manipulação do Boss
-
+#include "Enemy.h"  
+#include "Boss.h"    
 
 // Cria o laser
 Laser* laser_create(float initial_x, float width, float speed, unsigned int damage) {
@@ -14,23 +13,21 @@ Laser* laser_create(float initial_x, float width, float speed, unsigned int dama
     laser->x = initial_x;
     laser->width = width;
     laser->speed = speed;
-    laser->is_active = false;  // Inicia desativado
+    laser->is_active = false;  
     laser->damage = damage;
 
     return laser;
 }
 
-// Atualiza a posição do laser
 void laser_update(Laser *laser) {
     if (!laser || !laser->is_active) return;
 
-    // Move o laser para a direita
     laser->x += laser->speed;
 
-    // Desativa o laser se sair da tela
+    // desativa se o laser sai da terra
     if (laser->x > X_SCREEN) {
         laser->is_active = false;
-        laser->x = 0;  // Reinicia na posição inicial
+        laser->x = 0; 
     }
 }
 
@@ -39,13 +36,12 @@ void laser_draw(Laser *laser) {
     if (!laser || !laser->is_active) return;
 
     al_draw_filled_rectangle(
-        laser->x, 0,                // Posição inicial (esquerda)
-        laser->x + laser->width, Y_SCREEN,  // Posição final (direita)
-        al_map_rgb(255, 0, 0)       // Cor vermelha
+        laser->x, 0,                
+        laser->x + laser->width, Y_SCREEN,  
+        al_map_rgb(255, 0, 0)       
     );
 }
 
-// Verifica colisão do laser com inimigos
 void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies) {
     if (!laser || !laser->is_active || !enemies) return;
 
@@ -53,15 +49,13 @@ void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies) {
     Enemy *previous = NULL;
 
     while (current != NULL) {
-        // Verifica se o laser colide com o inimigo
         if (laser->x + laser->width >= current->x - current->hitbox_width / 2 &&
             laser->x <= current->x + current->hitbox_width / 2) {
 
-            // Aplica dano ao inimigo
             current->hp -= laser->damage;
             printf("Inimigo atingido! HP restante: %d\n", current->hp);
 
-            // Remove o inimigo se sua vida acabar
+            // remove o inimigo se sua vida acabar
             if (current->hp <= 0) {
                 if (previous) {
                     previous->next = current->next;
@@ -83,29 +77,24 @@ void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies) {
     }
 }
 
-// Verifica colisão do laser com o Boss
 void laser_check_collision_with_boss(Laser *laser, Boss *boss) {
     if (!laser || !laser->is_active || !boss) return;
 
-    // Verifica se o laser colide com o Boss
     if (laser->x + laser->width >= boss->x - BOSS_WIDTH / 2 &&
         laser->x <= boss->x + BOSS_WIDTH / 2) {
 
-        // Aplica dano ao Boss
         boss->hp -= laser->damage;
         printf("Boss atingido! HP restante: %d\n", boss->hp);
 
-        // Atualiza a barra de vida do Boss
         healthbar_update(boss->health_bar, boss->hp);
     }
 }
 
-// Ativa o laser
 void activate_laser(Laser *laser) {
     if (!laser) return;
 
     laser->is_active = true;
-    laser->x = 0;  // Começa do lado esquerdo da tela
+    laser->x = 0; 
 }
 
 void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies) {
@@ -115,15 +104,13 @@ void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **sho
     ShooterEnemy *prev = NULL;
 
     while (current != NULL) {
-        // Calcula os limites do inimigo atirador
+
         float shooter_left = current->x - current->hitbox_width / 2;
         float shooter_right = current->x + current->hitbox_width / 2;
 
-        // Verifica se o laser cobre a área do inimigo
         if (laser->x <= shooter_right && (laser->x + laser->width) >= shooter_left) {
             printf("Inimigo atirador destruído pelo laser!\n");
 
-            // Remove o inimigo atirador da lista
             if (prev == NULL) {
                 *shooter_enemies = current->next;
             } else {
@@ -133,28 +120,27 @@ void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **sho
             ShooterEnemy *to_remove = current;
             current = current->next;
 
-            destroy_shooter_enemy(to_remove);  // Libera a memória do inimigo atirador
+            destroy_shooter_enemy(to_remove); 
         } else {
-            // Avança para o próximo inimigo
             prev = current;
             current = current->next;
         }
     }
 }
 void draw_laser_cooldown_bar(float cooldown_timer, float max_cooldown, float screen_width, float screen_height) {
-    float bar_width = screen_width * 0.3;  // Largura da barra (80% da tela)
-    float bar_height = 20;  // Altura da barra
-    float bar_x = (screen_width - bar_width) / 2;  // Centraliza horizontalmente
-    float bar_y = screen_height - bar_height - 10;  // Fica no final da tela
+    float bar_width = screen_width * 0.3;  // largura, 30% da tela
+    float bar_height = 20; 
+    float bar_x = (screen_width - bar_width) / 2;  
+    float bar_y = screen_height - bar_height - 10; 
 
     float fill_width = bar_width * ((max_cooldown - cooldown_timer) / max_cooldown);
 
-    // Fundo da barra
+    // fundo da barra
     al_draw_filled_rectangle(bar_x, bar_y, bar_x + bar_width, bar_y + bar_height, al_map_rgb(50, 50, 50));
 
-    // Parte preenchida
+    // preenchimento
     al_draw_filled_rectangle(bar_x, bar_y, bar_x + fill_width, bar_y + bar_height, al_map_rgb(255, 0, 0));
 
-    // Contorno da barra
+    // contorno
     al_draw_rectangle(bar_x, bar_y, bar_x + bar_width, bar_y + bar_height, al_map_rgb(255, 255, 255), 2);
 }
