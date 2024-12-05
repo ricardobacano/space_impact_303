@@ -81,5 +81,7 @@ void shield_draw_bar(Shield *shield, ALLEGRO_FONT *font, float x, float y, float
 }
 
 void shield_destroy(Shield *shield) {
-    free(shield);
+    if (shield != NULL) {
+        free(shield);
+    }
 }

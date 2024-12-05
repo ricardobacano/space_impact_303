@@ -565,10 +565,25 @@ int main() {
     al_destroy_bitmap(boss_sprite);
     joystick_destroy(player_1->control);
     shieldbar_destroy(player_1_shieldbar);
-    shield_destroy(player_1->shield);
+    if (player_1->shield) {
+        shield_destroy(player_1->shield);
+        player_1->shield = NULL;
+    }
 
     return 0;
 }
 
 
-// 541	    al_destroy_bitmap(shooter_enemy_sprite); com erro
+/* [
+Thread 0x7fffe27fc6c0 (LWP 2440) exited]
+[New Thread 0x7fffe27fc6c0 (LWP 2495)]
+[New Thread 0x7fffe0c186c0 (LWP 2496)]
+[New Thread 0x7fffc3fff6c0 (LWP 2497)]
+[New Thread 0x7fffc37fe6c0 (LWP 2498)]
+*/
+
+/*  
+#0  0x00007ffff7bf1e4a in __GI___libc_free (mem=0x30) at ./malloc/malloc.c:3362
+#1  0x000055555555d63b in shield_destroy (shield=0x30) at Shield.c:84
+#2  0x000055555555b649 in main () at Game.c:568
+*/
