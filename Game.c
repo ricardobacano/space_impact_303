@@ -175,7 +175,6 @@ int main() {
     float boss_appearance_duration = 2.0f; 
     bool is_boss_surfacing = false;
 
-
     Explosion *explosions = NULL;
     float delta_time = 0.0;
 
@@ -561,15 +560,17 @@ int main() {
     al_destroy_timer(timer);
     al_destroy_bitmap(spaceship_image);
     al_destroy_event_queue(queue);
-    square_destroy(player_1);
     al_destroy_bitmap(boss_sprite);
     joystick_destroy(player_1->control);
     shieldbar_destroy(player_1_shieldbar);
+
+
     if (player_1->shield) {
         shield_destroy(player_1->shield);
-        player_1->shield = NULL;  // Evita acessar memória já liberada
+        player_1->shield = NULL; 
     }
 
+    square_destroy(player_1);
 
     return 0;
 }

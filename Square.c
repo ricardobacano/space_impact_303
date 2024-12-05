@@ -19,20 +19,15 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
     new_square->control = joystick_create();
     new_square->gun = pistol_create();
 
-    new_square->shield = (Shield*) malloc(sizeof(Shield));
+
+    new_square->shield = shield_create(100);
+
     if (!new_square->shield) {
         free(new_square->control);
         free(new_square->gun);
         free(new_square);
         return NULL;
-    }
-
-    new_square->shield->is_active = false;
-    new_square->shield->hp = 100.0f;  
-    new_square->shield->max_hp = 100.0f;
-    new_square->shield->cooldown = SHIELD_COOLDOWN;
-    new_square->shield->duration = 5.0f;
-    new_square->shield->last_used_time = -SHIELD_COOLDOWN;
+    };
 
     return new_square;
 }
@@ -98,9 +93,7 @@ void square_draw(square *player, ALLEGRO_BITMAP* spaceship_image, bool debug_mod
 
 void square_destroy(square *element) {
     if (element) {
-        if (element->control) joystick_destroy(element->control);
         if (element->gun) pistol_destroy(element->gun);
-        if (element->shield) free(element->shield);
         free(element);
     }
 }

@@ -36,6 +36,6 @@ void shield_draw(Shield *shield, float player_x, float player_y, float player_ra
 // desenha a barra de escudo na tela
 void shield_draw_bar(Shield *shield, ALLEGRO_FONT *font, float x, float y, float width, float height);
 
-void shield_destroy(Shield *shield);
+void *shield_destroy(Shield *shield);
 
 #endif // SHIELD_H

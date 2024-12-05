@@ -83,10 +83,13 @@ void shield_draw_bar(Shield *shield, ALLEGRO_FONT *font, float x, float y, float
     }
 }
 
-void shield_destroy(Shield *shield) {
-    if (shield == NULL) {
+void *shield_destroy(Shield *shield) {
+    
+    if (shield == NULL)
+    {
         fprintf(stderr, "Tentativa de destruir um escudo nulo.\n");
-        return;
+        return 0;
     }
     free(shield);
+    return 0;
 }
