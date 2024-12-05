@@ -567,8 +567,9 @@ int main() {
     shieldbar_destroy(player_1_shieldbar);
     if (player_1->shield) {
         shield_destroy(player_1->shield);
-        player_1->shield = NULL;
+        player_1->shield = NULL;  // Evita acessar memória já liberada
     }
+
 
     return 0;
 }

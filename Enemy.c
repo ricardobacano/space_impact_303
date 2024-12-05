@@ -74,8 +74,12 @@ void draw_enemies(Enemy *head, ALLEGRO_BITMAP* enemy_sprite, bool debug_mode) {
 
 
 void destroy_enemy(Enemy *enemy) {
-    free(enemy);
+    if (enemy != NULL) {
+        free(enemy);
+        enemy = NULL; // Previne acessos inválidos
+    }
 }
+
 
 void destroy_all_enemies(Enemy **head) {
     Enemy *current = *head;

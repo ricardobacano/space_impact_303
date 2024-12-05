@@ -35,6 +35,7 @@ void bullet_enemy_move(bullet_enemy *elements) {
 
 void bullet_enemy_destroy(bullet_enemy *element) {
     if (element != NULL) {
-        free(element); 
+        free(element);
+        element = NULL; 
     }
 }

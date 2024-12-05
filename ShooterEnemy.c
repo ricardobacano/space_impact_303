@@ -279,18 +279,17 @@ void move_shooter_bullets(ShooterEnemy *head, square *player) {
 }
 
 void destroy_shooter_enemy(ShooterEnemy *enemy) {
-    if (enemy == NULL) return;
-
-    bullet_enemy *current_bullet = enemy->shots;
-    while (current_bullet != NULL) {
-        bullet_enemy *next_bullet = current_bullet->next;
-        bullet_enemy_destroy(current_bullet);
-        current_bullet = next_bullet;
+    if (enemy != NULL) {
+        bullet_enemy *current_bullet = enemy->shots;
+        while (current_bullet != NULL) {
+            bullet_enemy *next_bullet = current_bullet->next;
+            bullet_enemy_destroy(current_bullet);
+            current_bullet = next_bullet;
+        }
+        free(enemy);
+        enemy = NULL; // Previne acessos inválidos
     }
-
-    free(enemy);
 }
-
 void destroy_all_shooter_enemies(ShooterEnemy *head) {
     while (head != NULL) {
         ShooterEnemy *next_enemy = head->next;

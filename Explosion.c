@@ -19,22 +19,22 @@ void update_explosions(Explosion **explosions, float delta_time) {
 
     while (current != NULL) {
         current->duration -= delta_time;
-
-        // remove a explosao se o tempo acabar
         if (current->duration <= 0) {
+            Explosion *to_destroy = current;
             if (previous) {
                 previous->next = current->next;
             } else {
                 *explosions = current->next;
             }
-            free(current);
-            current = (previous) ? previous->next : *explosions;
-        } else {
-            previous = current;
             current = current->next;
+            free(to_destroy);  // Libera antes de avançar
+            continue;
         }
+        previous = current;
+        current = current->next;
     }
 }
+
 
 void draw_explosions(Explosion *explosions, ALLEGRO_BITMAP *explosion_sprite) {
     for (Explosion *current = explosions; current != NULL; current = current->next) {

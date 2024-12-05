@@ -6,7 +6,10 @@
 
 Shield* shield_create(float max_hp) {
     Shield *new_shield = (Shield*) malloc(sizeof(Shield));
-    if (!new_shield) return NULL;
+    if (new_shield == NULL) {
+        fprintf(stderr, "Erro ao alocar memória para o escudo.\n");
+        return NULL;
+    }
 
     new_shield->is_active = false;
     new_shield->duration = SHIELD_DURATION;
@@ -81,7 +84,9 @@ void shield_draw_bar(Shield *shield, ALLEGRO_FONT *font, float x, float y, float
 }
 
 void shield_destroy(Shield *shield) {
-    if (shield != NULL) {
-        free(shield);
+    if (shield == NULL) {
+        fprintf(stderr, "Tentativa de destruir um escudo nulo.\n");
+        return;
     }
+    free(shield);
 }
