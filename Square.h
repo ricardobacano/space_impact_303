@@ -9,6 +9,7 @@
 #define SQUARE_STEP 10
 #define X_SCREEN 800
 #define Y_SCREEN 600
+#define PLAYER_INITIAL_HP 200
 
 typedef struct {
     unsigned char side;

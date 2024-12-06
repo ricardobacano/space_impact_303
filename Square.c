@@ -13,7 +13,7 @@ square* square_create(unsigned char side, unsigned char face, unsigned short x, 
 
     new_square->side = 55;
     new_square->face = face;
-    new_square->hp = 5;
+    new_square->hp = 0;
     new_square->x = x;
     new_square->y = y;
     new_square->control = joystick_create();

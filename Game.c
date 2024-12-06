@@ -91,6 +91,18 @@ int main() {
         return -1;
     }
 
+    ALLEGRO_BITMAP* enemy_sprite2 = al_load_bitmap("./imagens/inimigo_4.png");
+    if (!enemy_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do inimigo.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP* shooter_enemy_sprite2 = al_load_bitmap("./imagens/inimigo_3.png");
+    if (!shooter_enemy_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do inimigo atirador.\n");
+        return -1;
+    }
+
      if (access("./imagens/inimigo_f1_tiro.png", F_OK) != 0) {
         printf("Arquivo não encontrado!\n");
     } else {
@@ -149,14 +161,16 @@ int main() {
     display_start_screen(disp, queue, font);
 
     square* player_1 = square_create(20, 1, 10, Y_SCREEN / 2, X_SCREEN, Y_SCREEN);
-    if (!player_1) return 1;
+    if (!player_1) 
+        return 1;
     player_1->hp = 200;
 
     HealthBar *player_1_healthbar = healthbar_create(10, 10, player_1->hp);
     ShieldBar *player_1_shieldbar = shieldbar_create(10 + HEALTHBAR_WIDTH + 10, 10, player_1->shield->duration);
 
     Score *score = score_create();
-    if (!score) return 2;
+    if (!score) 
+        return 2;
 
     Enemy *enemies = NULL;
     ShooterEnemy* shooter_enemies = NULL;
@@ -185,6 +199,7 @@ int main() {
     bool is_double_speed = false;  
     bool debug_mode = false;
 
+    int game_phase = 1;
     while (1) {
         al_wait_for_event(queue, &event);
         if (p1k) {
@@ -196,6 +211,358 @@ int main() {
             if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_SPACE) break;
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
         } else {
+            if (game_phase == 1) {
+                if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
+
+                    if (event.keyboard.keycode == ALLEGRO_KEY_2) {
+                        toggle_game_speed(timer, &is_double_speed);
+                        background_update(2.0);
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_P) {
+                        is_paused = !is_paused;
+                        if (is_paused) {
+                            printf("Jogo pausado\n");
+                        } else {
+                            printf("Jogo retomado\n");
+                        }
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
+                        printf("Boss apareceu!\n");
+                        is_boss_surfacing = true;
+                        boss_appearance_timer = 0.0f;
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_L) { 
+                        if (power_up_stage >= 2 && laser_ready) {  
+                            if (!laser->is_active) {
+                                activate_laser(laser);
+                                printf("Laser ativado!\n");
+                                laser_ready = false;  
+                                laser_cooldown_timer = LASER_COOLDOWN;
+                            }
+                        } else {
+                            printf("Você ainda não desbloqueou o laser!\n");
+                        }
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_E) {
+                        if (power_up_stage >= 1) {  
+                            shield_activate(player_1->shield);
+                        } else {
+                            printf("Você ainda não tem o escudo desbloqueado!\n");
+                        }
+                    }
+                    if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_H) {
+                        debug_mode = !debug_mode;  
+                    }
+                    if (!is_paused) {
+                        if (event.keyboard.keycode == ALLEGRO_KEY_A) { 
+                            player_1->control->left = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { 
+                            player_1->control->right = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { 
+                            player_1->control->up = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { 
+                            player_1->control->down = 1;  
+                        } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { 
+                            player_1->control->fire = 1;
+                 
+                        }
+                    } 
+                } else if (event.type == ALLEGRO_EVENT_KEY_UP) {
+                if (!is_paused) {
+                    if (event.keyboard.keycode == ALLEGRO_KEY_A) { player_1->control->left = 0;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_D) { player_1->control->right = 0; 
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_W) { player_1->control->up = 0;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_S) { player_1->control->down = 0;  
+                    } else if (event.keyboard.keycode == ALLEGRO_KEY_C) { player_1->control->fire = 0;  
+                    }
+                }
+            } else if (event.type == ALLEGRO_EVENT_TIMER) {
+                if (!is_paused) {
+                    frame_count++;
+
+                    background_update(enemy_speed / 2.0);  
+
+                    if (frame_count % 200 == 0) {
+                        enemy_speed += SPEED_INCREMENT;
+                        if (enemy_speed > MAX_ENEMY_SPEED) {
+                            enemy_speed = MAX_ENEMY_SPEED;
+                        }
+                    }
+
+                    if (enemy_speed == MAX_ENEMY_SPEED && boss == NULL) {
+                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
+                        printf("Boss apareceu automaticamente!\n");
+                    }
+
+                    if (boss == NULL && rand() % 50 == 0) {
+                        float new_x = X_SCREEN;
+                        float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN); 
+
+                        if (!check_collision_between_all_enemies(new_x, new_y, enemies, shooter_enemies)) {
+                            Enemy *new_enemy = create_enemy(new_x, new_y, 35.0f, 35.0f, 20); 
+                            if (new_enemy) {
+                                new_enemy->next = enemies;
+                                enemies = new_enemy;
+                            }
+                        }
+                    }
+
+                    if (boss == NULL && rand() % 200 == 0) {  
+                    float new_x = X_SCREEN;
+                    float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);  
+
+                    if (!check_collision_between_all_enemies(new_x, new_y, enemies, shooter_enemies)) {
+                        ShooterEnemy *new_enemy = create_shooter_enemy(new_x, new_y, 30);  
+                        if (new_enemy) {
+                            new_enemy->next = shooter_enemies;
+                            shooter_enemies = new_enemy;
+                            }
+                        }
+                    }
+
+                    if (rand() % 100 == 0) {
+                        float new_x = X_SCREEN;
+                        float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
+
+                        if (!check_collision_with_scrap(new_x, new_y, scrap_list)) {
+                            Scrap *new_scrap = create_scrap(new_x, new_y);
+                                if (new_scrap) {
+                                    new_scrap->next = scrap_list;
+                                    scrap_list = new_scrap;
+                            }
+                        }  
+                    }
+
+                    char power_up_message[50] = "";  
+                    float power_up_message_timer = 0;
+
+                    if (scrap_count >= 5) {
+                        scrap_count = 0; 
+                        power_up_stage++; 
+
+                        if (power_up_stage > 3) power_up_stage = 3;  
+
+                        switch (power_up_stage) {
+                            case 1:
+                                snprintf(power_up_message, sizeof(power_up_message), "ESCUDO CONSTRUIDO!");
+                                break;
+                            case 2:
+                                snprintf(power_up_message, sizeof(power_up_message), "LASER DISPONIVEL!");
+                                break;
+                            case 3:
+                                snprintf(power_up_message, sizeof(power_up_message), "REPARO AUTOMATICO!");
+                                break;
+                        }
+
+                        power_up_message_timer = 2.0;  
+                    }
+
+
+                    if (power_up_message_timer > 0) {
+                        al_draw_text(font, al_map_rgb(255, 255, 0), X_SCREEN / 2, 50, ALLEGRO_ALIGN_CENTER, power_up_message);
+                        power_up_message_timer -= 1.0 / 30.0; 
+                    }
+
+                    if (!laser_ready) {
+                        laser_cooldown_timer -= 1.0 / 30.0;  
+                        if (laser_cooldown_timer <= 0) {
+                            laser_ready = true;  
+                            laser_cooldown_timer = 0;  
+                            printf("Laser pronto para uso!\n");
+                        }
+                    }
+
+                    ShooterEnemy *current_shooter = shooter_enemies;
+                    while (current_shooter != NULL) {
+                        if (frame_count % 100 == 0) {
+                            shooter_enemy_shoot(current_shooter);
+                        }
+                        current_shooter = current_shooter->next;
+                    }
+
+                    if (boss != NULL) {
+                        update_boss(boss, player_1);
+                    }
+
+                    
+
+                    delta_time = 5.0 / 30.0;
+
+                    update_position(player_1);
+                    update_bullets(player_1);
+                    update_enemies(&enemies, enemy_speed);
+                    update_shooter_enemy(&shooter_enemies);
+                    update_explosions(&explosions, delta_time);
+                    shield_update(player_1->shield, al_get_time());
+                    shieldbar_update(player_1_shieldbar, player_1->shield->is_active ? player_1->shield->duration - (al_get_time() - player_1->shield->start_time) : 0);
+                    update_boss(boss,player_1);
+                    shoot_pattern = update_boss_shooting(boss, frame_count, shoot_pattern, shot1_boss, shot2_boss);
+                    laser_update(laser);
+
+
+                    move_shooter_bullets(shooter_enemies, player_1);
+                    move_scrap(scrap_list, enemy_speed);
+
+                    check_collision_with_player(player_1, &enemies);
+                    check_kill(player_1, &enemies, score, &explosions);
+                    check_kill_shooter_enemies(player_1, &shooter_enemies, score, &explosions);
+                    check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
+                    check_player_bullets_with_boss(player_1, boss);
+                    laser_check_collision_with_enemies(laser, &enemies);
+                    laser_check_collision_with_boss(laser, boss);
+                    check_boss_bullets_with_player(player_1, boss);
+                    laser_check_collision_with_shooter_enemies(laser, &shooter_enemies);
+
+                    if (boss != NULL) {
+                        check_boss_collision_with_player(player_1, boss);
+                    }
+
+                    healthbar_update(player_1_healthbar, player_1->hp);
+                    p1k = (player_1->hp <= 0) ? 1 : 0;
+                }
+
+                if (boss != NULL) {
+                    if (frame_count % 150 == 0) {
+                        shoot_pattern = (shoot_pattern == 1) ? 2 : 1;
+                    }
+
+                    if (shoot_pattern == 1 && boss->cooldown == 0) {
+                        boss_shoot(boss, shot1_boss, shot2_boss);
+                    } else if (shoot_pattern == 2 && boss->cooldown == 0) {
+                        boss_shoot(boss, shot2_boss, shot1_boss);
+                    }
+
+                    update_boss_shots(boss);
+
+                    boss_shot *current_shot = boss->shots;
+                    while (current_shot != NULL) {
+                        boss_shot_draw(current_shot, current_shot->sprite);
+                        current_shot = current_shot->next;
+                    }
+
+                    check_player_bullets_with_boss_shots(player_1, boss);
+
+                }
+
+    
+
+                Scrap *prev_scrap = NULL;
+                Scrap *current_scrap = scrap_list;
+
+                while (current_scrap != NULL) {
+                    if ((player_1->x + player_1->side / 2 >= current_scrap->x - 5) &&
+                        (player_1->x - player_1->side / 2 <= current_scrap->x + 5) &&
+                        (player_1->y + player_1->side / 2 >= current_scrap->y - 5) &&
+                        (player_1->y - player_1->side / 2 <= current_scrap->y + 5)) {
+                        
+                        scrap_count++;
+
+                        if (prev_scrap) {
+                            prev_scrap->next = current_scrap->next;
+                            if (current_scrap != NULL) {
+                                destroy_scrap(current_scrap);
+                                current_scrap = NULL;  
+                            }
+                            current_scrap = prev_scrap->next;
+                        } else {
+                            scrap_list = current_scrap->next;
+                            if (current_scrap != NULL) {
+                                destroy_scrap(current_scrap);
+                                current_scrap = NULL;  
+                            }
+                            current_scrap = scrap_list;
+                        }
+                    } else {
+                        prev_scrap = current_scrap;
+                        current_scrap = current_scrap->next;
+                    }
+                }
+
+                al_clear_to_color(al_map_rgb(0, 0, 0));
+
+                background_draw();
+                healthbar_draw(player_1_healthbar);
+                shield_draw(player_1->shield, player_1->x, player_1->y, player_1->side / 2);
+                shield_draw_bar(player_1->shield, font, 120, 10, 200, 20);
+
+                char scrap_text[50];
+                snprintf(scrap_text, 50, "Sucata: %d", scrap_count);
+                al_draw_text(font, al_map_rgb(255, 255, 0), 10, 40, 0, scrap_text);
+
+                draw_shield_timer(player_1->shield, font, 330, 15);
+
+                square_draw(player_1, spaceship_image, debug_mode);
+                
+                draw_enemies(enemies, enemy_sprite, debug_mode);
+
+                draw_scrap(scrap_list, scrap_sprite);
+
+                draw_explosions(explosions, explosion_sprite);
+
+                laser_draw(laser);
+
+
+                for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
+                    al_draw_bitmap(bullet_sprite, index->x - al_get_bitmap_width(bullet_sprite) / 2, 
+                                index->y - al_get_bitmap_height(bullet_sprite) / 2, 0);
+                }
+
+                draw_shooter_enemies(shooter_enemies, shooter_enemy_sprite, debug_mode);
+
+                for (ShooterEnemy *current = shooter_enemies; current != NULL; current = current->next) {
+                    for (bullet_enemy *bullet = current->shots; bullet != NULL; bullet = bullet->next) {
+                        al_draw_bitmap(shooter_bullet_sprite,
+                                    bullet->x - al_get_bitmap_width(shooter_bullet_sprite) / 2,
+                                    bullet->y - al_get_bitmap_height(shooter_bullet_sprite) / 2,
+                                    0);
+                    }
+                }
+
+                if (is_boss_surfacing) {
+                    boss_appearance_timer += delta_time;
+
+                    draw_boss_appearance(boss_sprite, boss_appearance_timer / boss_appearance_duration, X_SCREEN, Y_SCREEN);
+
+                    if (boss_appearance_timer >= boss_appearance_duration) {
+                        is_boss_surfacing = false; 
+                    }
+                } else if (boss != NULL) {
+                
+                    draw_boss(boss, debug_mode);
+                    update_boss(boss, player_1);
+                }
+
+
+                score_draw(score);
+
+                if (player_1->gun->timer && !is_paused) player_1->gun->timer--;
+
+                if (is_paused) {
+                     al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "JOGO PAUSADO");
+                    al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione 'P' para continuar");
+                }
+
+                draw_laser_cooldown_bar(laser_cooldown_timer, LASER_COOLDOWN, X_SCREEN, Y_SCREEN);
+
+                if (boss != NULL && boss->hp <= 0) {
+                        printf("Boss derrotado! Fase 2 iniciada!\n");
+                        game_phase = 2; // Mudar para a Fase 2
+                }
+
+                al_flip_display();
+            } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+                break;
+            } 
+        } else if (game_phase == 2) {
+            player_1->hp = 200;
+            player_1->x = X_SCREEN / 2;
+            player_1->y = Y_SCREEN - 50; 
+
+            score = 0;
+            scrap_count = 0;
+    
+            background_init("./imagens/fundo2D_certo.png");
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
 
                     if (event.keyboard.keycode == ALLEGRO_KEY_2) {
@@ -429,6 +796,7 @@ int main() {
 
                 }
 
+
                 Scrap *prev_scrap = NULL;
                 Scrap *current_scrap = scrap_list;
 
@@ -476,7 +844,7 @@ int main() {
 
                 square_draw(player_1, spaceship_image, debug_mode);
                 
-                draw_enemies(enemies, enemy_sprite, debug_mode);
+                draw_enemies(enemies, enemy_sprite2, debug_mode);
 
                 draw_scrap(scrap_list, scrap_sprite);
 
@@ -490,7 +858,7 @@ int main() {
                                 index->y - al_get_bitmap_height(bullet_sprite) / 2, 0);
                 }
 
-                draw_shooter_enemies(shooter_enemies, shooter_enemy_sprite, debug_mode);
+                draw_shooter_enemies(shooter_enemies, shooter_enemy_sprite2, debug_mode);
 
                 for (ShooterEnemy *current = shooter_enemies; current != NULL; current = current->next) {
                     for (bullet_enemy *bullet = current->shots; bullet != NULL; bullet = bullet->next) {
@@ -527,9 +895,12 @@ int main() {
 
                 draw_laser_cooldown_bar(laser_cooldown_timer, LASER_COOLDOWN, X_SCREEN, Y_SCREEN);
 
+
+
                 al_flip_display();
-            } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-                break;
+                } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+                    break;
+                } 
             }
         }
     }
@@ -574,18 +945,3 @@ int main() {
 
     return 0;
 }
-
-
-/* [
-Thread 0x7fffe27fc6c0 (LWP 2440) exited]
-[New Thread 0x7fffe27fc6c0 (LWP 2495)]
-[New Thread 0x7fffe0c186c0 (LWP 2496)]
-[New Thread 0x7fffc3fff6c0 (LWP 2497)]
-[New Thread 0x7fffc37fe6c0 (LWP 2498)]
-*/
-
-/*  
-#0  0x00007ffff7bf1e4a in __GI___libc_free (mem=0x30) at ./malloc/malloc.c:3362
-#1  0x000055555555d63b in shield_destroy (shield=0x30) at Shield.c:84
-#2  0x000055555555b649 in main () at Game.c:568
-*/
