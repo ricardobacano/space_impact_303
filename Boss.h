@@ -10,7 +10,7 @@
 
 #define BOSS_WIDTH 100
 #define BOSS_HEIGHT 60
-#define BOSS_MAX_HP 1000
+#define BOSS_MAX_HP 10
 #define BOSS_SHOT_COOLDOWN 100  
 #define BOSS_SHOT_RATE 10       
 #define BOSS_MOVE_SPEED 0.7       

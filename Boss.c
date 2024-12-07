@@ -70,8 +70,6 @@ int update_boss_shooting(Boss *boss, int frame_count, int shoot_pattern, ALLEGRO
     return shoot_pattern;
 }
 
-
-
 void update_boss(Boss *boss, square *player) {
     if (boss == NULL || player == NULL) return;
 

@@ -34,9 +34,6 @@
 #define SPEED_INCREMENT 0.8f    
 #define SPAWN_MARGIN 50 
 
-float enemy_speed = INITIAL_ENEMY_SPEED;
-int frame_count = 0;
-
 int main() {
     al_init();
     al_init_primitives_addon();
@@ -175,6 +172,9 @@ int main() {
     Enemy *enemies = NULL;
     ShooterEnemy* shooter_enemies = NULL;
 
+    float enemy_speed = INITIAL_ENEMY_SPEED;
+    int frame_count = 0;
+
     Laser *laser = laser_create(0, LASER_WIDTH, LASER_SPEED, LASER_DAMAGE);
     bool laser_ready = true;  
     float laser_cooldown_timer = 0; 
@@ -217,6 +217,9 @@ int main() {
                     if (event.keyboard.keycode == ALLEGRO_KEY_2) {
                         toggle_game_speed(timer, &is_double_speed);
                         background_update(2.0);
+                    }
+                    if (event.keyboard.keycode == ALLEGRO_KEY_N) {
+                        game_phase = 2;
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_P) {
                         is_paused = !is_paused;
@@ -384,8 +387,6 @@ int main() {
                     if (boss != NULL) {
                         update_boss(boss, player_1);
                     }
-
-                    
 
                     delta_time = 5.0 / 30.0;
 
@@ -547,6 +548,9 @@ int main() {
 
                 if (boss != NULL && boss->hp <= 0) {
                         printf("Boss derrotado! Fase 2 iniciada!\n");
+                        if (boss != NULL) {
+                            destroy_boss(boss);
+                        }
                         game_phase = 2; // Mudar para a Fase 2
                 }
 
@@ -555,14 +559,38 @@ int main() {
                 break;
             } 
         } else if (game_phase == 2) {
-            player_1->hp = 200;
-            player_1->x = X_SCREEN / 2;
-            player_1->y = Y_SCREEN - 50; 
 
-            score = 0;
-            scrap_count = 0;
-    
+            float countdown_timer = 5.0f; // Tempo inicial da contagem regressiva
+            bool countdown_active = true;  // Ativa a contagem
+
+            // Atualiza o temporizador da contagem regressiva
+            if (countdown_active) {
+                countdown_timer -= 1.0f / 30.0f; // Atualize a contagem regressiva (30 FPS)
+
+                // Desenhe o texto da contagem regressiva
+                char countdown_text[50];
+                snprintf(countdown_text, sizeof(countdown_text), "Iniciando Fase 2 em: %.0f", countdown_timer);
+                al_clear_to_color(al_map_rgb(0, 0, 0)); // Preencher a tela de preto
+                al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, countdown_text);
+
+                al_flip_display(); // Atualizar a tela
+                continue;
+                if (countdown_timer <= 0)
+                {
+                    countdown_active = false;  // Desliga a contagem regressiva
+                    countdown_timer = 0;       // Garante que o valor não fique negativo
+                }
+                continue;
+
+            if (!countdown_active && game_phase == 2) {
+                player_1->x = 50;                
+                player_1->y = Y_SCREEN / 2;     
+                player_1->hp = 200;  
+
+            enemy_speed = INITIAL_ENEMY_SPEED;
+
             background_init("./imagens/fundo2D_certo.png");
+
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
 
                     if (event.keyboard.keycode == ALLEGRO_KEY_2) {
@@ -578,10 +606,7 @@ int main() {
                         }
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_B && boss == NULL) {
-                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
-                        printf("Boss apareceu!\n");
-                        is_boss_surfacing = true;
-                        boss_appearance_timer = 0.0f;
+                        printf("BOSS VAI APARECER CALMA\n");
                     }
                     if (event.keyboard.keycode == ALLEGRO_KEY_L) { 
                         if (power_up_stage >= 2 && laser_ready) {  
@@ -642,8 +667,7 @@ int main() {
                     }
 
                     if (enemy_speed == MAX_ENEMY_SPEED && boss == NULL) {
-                        boss = create_boss(X_SCREEN - 100, Y_SCREEN / 2, boss_sprite);
-                        printf("Boss apareceu automaticamente!\n");
+                        printf("Boss AINDA APARECE automaticamente!\n");
                     }
 
                     if (boss == NULL && rand() % 50 == 0) {
@@ -735,8 +759,6 @@ int main() {
                     if (boss != NULL) {
                         update_boss(boss, player_1);
                     }
-
-                    
 
                     delta_time = 5.0 / 30.0;
 
@@ -897,16 +919,14 @@ int main() {
 
 
 
-                al_flip_display();
-                } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-                    break;
-                } 
+                        al_flip_display();
+                        } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
+                            break;
+                        } 
+                    }
+                }       
             }
         }
-    }
-
-    if (boss != NULL) {
-        destroy_boss(boss);
     }
 
     background_destroy();
