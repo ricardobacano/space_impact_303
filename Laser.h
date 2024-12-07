@@ -1,12 +1,14 @@
 #ifndef __LASER_H__
 #define __LASER_H__
 
+#include <allegro5/allegro_primitives.h>
+
 #include <stdbool.h>
 #include "Square.h"  // Para usar a estrutura square
 #include "Boss.h"
 #include "Enemy.h"
 #include "ShooterEnemy.h"
-#include <allegro5/allegro_primitives.h>
+#include "Score.h"
 
 #define LASER_SPEED 10.0         
 #define LASER_WIDTH 20         
@@ -36,10 +38,10 @@ void activate_laser(Laser *laser);
 void laser_check_collision_with_boss(Laser *laser, Boss *boss);
 
 // função colisão com inimigos convencionais 
-void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies);
+void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies, Score *score);
 
 // função pra colisão com inimigo que atira 
-void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies);
+void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies, Score *score);
 
 //função pra desenhar a barra de cooldown
 void draw_laser_cooldown_bar(float cooldown_timer, float max_cooldown, float screen_width, float screen_height);

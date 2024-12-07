@@ -162,8 +162,7 @@ void check_collision_with_player(square *player, Enemy **enemies) {
     }
 }
 
-
-unsigned char check_kill(square *player, Enemy **enemies, Score *score, Explosion **explosion) {
+unsigned char check_kill(square *player, Enemy **enemies, Score *score, Explosion **explosion, int *enemies_destroyed) {
     Enemy *previous = NULL, *current = *enemies;
 
     while (current != NULL) {
@@ -185,6 +184,9 @@ unsigned char check_kill(square *player, Enemy **enemies, Score *score, Explosio
                     }
 
                     score_increment(score, 10);
+                    if (enemies_destroyed) {   
+                        (*enemies_destroyed)++;
+                    }
 
                     if (previous) {
                         previous->next = current->next;

@@ -26,6 +26,8 @@
 #include "Laser.h"
 #include "IntroScreen.h"
 #include "BossAppearance.h"
+#include "TransitionScreen.h"
+#include "GameOver.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -199,14 +201,21 @@ int main() {
     bool is_double_speed = false;  
     bool debug_mode = false;
 
+    int enemies_destroyed = 0;
+
     int game_phase = 1;
     while (1) {
         al_wait_for_event(queue, &event);
         if (p1k) {
-            // Tela de game over
             al_clear_to_color(al_map_rgb(0, 0, 0));
-            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, "GAME OVER OTÁRIO");
-            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione ESPAÇO para sair");
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 - 40, ALLEGRO_ALIGN_CENTER, "GAME OVER OTARIO");
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 - 20, ALLEGRO_ALIGN_CENTER, "Pressione ESPAÇO para sair");
+            char score_text[50];
+            snprintf(score_text, sizeof(score_text), "Pontuacao Final: %d", score->points);
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 20, ALLEGRO_ALIGN_CENTER, score_text);
+            char enemies_text[50];
+            snprintf(enemies_text, sizeof(enemies_text), "Inimigos Destruidos: %d", enemies_destroyed);
+            al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2 + 40, ALLEGRO_ALIGN_CENTER, enemies_text);
             al_flip_display();
             if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_SPACE) break;
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) break;
@@ -324,7 +333,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 100 == 0) {
+                    if (rand() % 20 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
@@ -406,14 +415,14 @@ int main() {
                     move_scrap(scrap_list, enemy_speed);
 
                     check_collision_with_player(player_1, &enemies);
-                    check_kill(player_1, &enemies, score, &explosions);
+                    check_kill(player_1, &enemies, score, &explosions, &enemies_destroyed);
                     check_kill_shooter_enemies(player_1, &shooter_enemies, score, &explosions);
                     check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
                     check_player_bullets_with_boss(player_1, boss);
-                    laser_check_collision_with_enemies(laser, &enemies);
+                    laser_check_collision_with_enemies(laser, &enemies, score);
                     laser_check_collision_with_boss(laser, boss);
                     check_boss_bullets_with_player(player_1, boss);
-                    laser_check_collision_with_shooter_enemies(laser, &shooter_enemies);
+                    laser_check_collision_with_shooter_enemies(laser, &shooter_enemies, score);
 
                     if (boss != NULL) {
                         check_boss_collision_with_player(player_1, boss);
@@ -546,13 +555,29 @@ int main() {
 
                 draw_laser_cooldown_bar(laser_cooldown_timer, LASER_COOLDOWN, X_SCREEN, Y_SCREEN);
 
-                if (boss != NULL && boss->hp <= 0) {
-                        printf("Boss derrotado! Fase 2 iniciada!\n");
-                        if (boss != NULL) {
-                            destroy_boss(boss);
-                        }
-                        game_phase = 2; // Mudar para a Fase 2
+               if (boss != NULL && boss->hp <= 0) {
+                printf("Boss derrotado! Endereço do boss: %p\n", boss);
+
+                // Liberar projéteis do boss
+                if (boss->shots != NULL) {
+                    boss_shot *current_shot = boss->shots;
+                    while (current_shot != NULL) {
+                        boss_shot *next_shot = current_shot->next;
+                        boss_shot_destroy(current_shot); // Libere os projéteis corretamente
+                        current_shot = next_shot;
+                    }
+                    boss->shots = NULL; // Certifique-se de não acessá-los novamente
+                    printf("Todos os projéteis do boss foram destruídos.\n");
                 }
+
+                destroy_boss(boss); // Libera recursos do boss
+                printf("Boss destruído no endereço: %p\n", boss);
+                boss = NULL; // Certifique-se de que o ponteiro seja resetado
+                printf("Boss resetado para NULL. Transição para fase 2.\n");
+
+                // Transição para fase 2
+                game_phase = 2;
+            }
 
                 al_flip_display();
             } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
@@ -560,36 +585,58 @@ int main() {
             } 
         } else if (game_phase == 2) {
 
-            float countdown_timer = 5.0f; // Tempo inicial da contagem regressiva
-            bool countdown_active = true;  // Ativa a contagem
+            static TransitionScreen transition_screen;
+            static bool transition_initialized = false;
+            static bool phase_2_initialized = false;  
 
-            // Atualiza o temporizador da contagem regressiva
-            if (countdown_active) {
-                countdown_timer -= 1.0f / 30.0f; // Atualize a contagem regressiva (30 FPS)
+            if (!transition_initialized) {
+                transition_init(&transition_screen, font, 5.0f); // Contagem regressiva de 5 segundos
+                transition_initialized = true;
+            }
 
-                // Desenhe o texto da contagem regressiva
-                char countdown_text[50];
-                snprintf(countdown_text, sizeof(countdown_text), "Iniciando Fase 2 em: %.0f", countdown_timer);
-                al_clear_to_color(al_map_rgb(0, 0, 0)); // Preencher a tela de preto
-                al_draw_text(font, al_map_rgb(255, 255, 255), X_SCREEN / 2, Y_SCREEN / 2, ALLEGRO_ALIGN_CENTER, countdown_text);
+            bool is_transition_active = transition_update(&transition_screen, 1.0f / 30.0f);
 
-                al_flip_display(); // Atualizar a tela
-                continue;
-                if (countdown_timer <= 0)
-                {
-                    countdown_active = false;  // Desliga a contagem regressiva
-                    countdown_timer = 0;       // Garante que o valor não fique negativo
+            if (is_transition_active) {
+                transition_draw(&transition_screen);
+                al_flip_display();
+            } else {
+                if (!phase_2_initialized) {
+
+                while (enemies != NULL) {
+                    Enemy *temp = enemies;
+                    enemies = enemies->next;
+                    destroy_enemy(temp); // Função que libera memória de um inimigo
                 }
-                continue;
 
-            if (!countdown_active && game_phase == 2) {
+                while (shooter_enemies != NULL) {
+                    ShooterEnemy *temp = shooter_enemies;
+                    shooter_enemies = shooter_enemies->next;
+                    destroy_shooter_enemy(temp); // Função que libera memória do inimigo atirador
+                }
+
+                // Zerar sucata (scrap)
+                while (scrap_list != NULL) {
+                    Scrap *temp = scrap_list;
+                    scrap_list = scrap_list->next;
+                    destroy_scrap(temp); // Função que libera memória de um item de sucata
+                }
                 player_1->x = 50;                
                 player_1->y = Y_SCREEN / 2;     
-                player_1->hp = 200;  
+                player_1->hp = 200;
 
-            enemy_speed = INITIAL_ENEMY_SPEED;
+                player_1->control->right = 0;
+                player_1->control->left = 0;
+                player_1->control->up = 0;
+                player_1->control->down = 0;
+                player_1->control->fire = 0;
 
-            background_init("./imagens/fundo2D_certo.png");
+                enemy_speed = INITIAL_ENEMY_SPEED;
+
+                background_init("./imagens/fundo2D_certo.png");
+
+                phase_2_initialized = true; // Marcar como inicializado
+            }
+
 
             if (event.type == ALLEGRO_EVENT_KEY_DOWN) {
 
@@ -696,7 +743,7 @@ int main() {
                         }
                     }
 
-                    if (rand() % 100 == 0) {
+                    if (rand() % 20 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);
 
@@ -714,20 +761,31 @@ int main() {
 
                     if (scrap_count >= 5) {
                         scrap_count = 0; 
-                        power_up_stage++; 
 
-                        if (power_up_stage > 3) power_up_stage = 3;  
+                        if (power_up_stage < 3) {
+                            power_up_stage++; 
 
-                        switch (power_up_stage) {
-                            case 1:
-                                snprintf(power_up_message, sizeof(power_up_message), "ESCUDO CONSTRUIDO!");
-                                break;
-                            case 2:
-                                snprintf(power_up_message, sizeof(power_up_message), "LASER DISPONIVEL!");
-                                break;
-                            case 3:
-                                snprintf(power_up_message, sizeof(power_up_message), "REPARO AUTOMATICO!");
-                                break;
+                            switch (power_up_stage) {
+                                case 1:
+                                    snprintf(power_up_message, sizeof(power_up_message), "ESCUDO CONSTRUIDO!");
+                                    player_1->shield->hp = player_1->shield->max_hp;  
+                                    player_1->shield->is_active = true;  
+                                    player_1->shield->start_time = al_get_time();
+                                    break;
+
+                                case 2:
+                                    snprintf(power_up_message, sizeof(power_up_message), "LASER DISPONIVEL!");
+                                    break;
+
+                                case 3:
+                                    snprintf(power_up_message, sizeof(power_up_message), "REPARO AUTOMATICO!");
+                                    break;
+                            }
+                        } else { 
+                            // Cura automática ao coletar sucatas adicionais
+                            player_1->hp += 20;  
+                            if (player_1->hp > 100) player_1->hp = 100;  
+                            snprintf(power_up_message, sizeof(power_up_message), "Reparando Vida!");
                         }
 
                         power_up_message_timer = 2.0;  
@@ -778,14 +836,14 @@ int main() {
                     move_scrap(scrap_list, enemy_speed);
 
                     check_collision_with_player(player_1, &enemies);
-                    check_kill(player_1, &enemies, score, &explosions);
+                    check_kill(player_1, &enemies, score, &explosions, &enemies_destroyed);
                     check_kill_shooter_enemies(player_1, &shooter_enemies, score, &explosions);
                     check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
                     check_player_bullets_with_boss(player_1, boss);
-                    laser_check_collision_with_enemies(laser, &enemies);
+                    laser_check_collision_with_enemies(laser, &enemies,score);
                     laser_check_collision_with_boss(laser, boss);
                     check_boss_bullets_with_player(player_1, boss);
-                    laser_check_collision_with_shooter_enemies(laser, &shooter_enemies);
+                    laser_check_collision_with_shooter_enemies(laser, &shooter_enemies,score);
 
                     if (boss != NULL) {
                         check_boss_collision_with_player(player_1, boss);
@@ -922,10 +980,10 @@ int main() {
                         al_flip_display();
                         } else if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
                             break;
-                        } 
-                    }
-                }       
+                    } 
+                }  
             }
+                  
         }
     }
 

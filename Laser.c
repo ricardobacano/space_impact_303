@@ -42,7 +42,7 @@ void laser_draw(Laser *laser) {
     );
 }
 
-void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies) {
+void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies,  Score *score) {
     if (!laser || !laser->is_active || !enemies) return;
 
     Enemy *current = *enemies;
@@ -53,10 +53,10 @@ void laser_check_collision_with_enemies(Laser *laser, Enemy **enemies) {
             laser->x <= current->x + current->hitbox_width / 2) {
 
             current->hp -= laser->damage;
-            printf("Inimigo atingido! HP restante: %d\n", current->hp);
 
             // remove o inimigo se sua vida acabar
             if (current->hp <= 0) {
+                score_increment(score, 10);
                 if (previous) {
                     previous->next = current->next;
                 } else {
@@ -97,7 +97,7 @@ void activate_laser(Laser *laser) {
     laser->x = 0; 
 }
 
-void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies) {
+void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **shooter_enemies, Score *score) {
     if (!laser || !shooter_enemies) return;
 
     ShooterEnemy *current = *shooter_enemies;
@@ -109,8 +109,8 @@ void laser_check_collision_with_shooter_enemies(Laser *laser, ShooterEnemy **sho
         float shooter_right = current->x + current->hitbox_width / 2;
 
         if (laser->x <= shooter_right && (laser->x + laser->width) >= shooter_left) {
-            printf("Inimigo atirador destruído pelo laser!\n");
-
+            
+            score_increment(score, 10);
             if (prev == NULL) {
                 *shooter_enemies = current->next;
             } else {
