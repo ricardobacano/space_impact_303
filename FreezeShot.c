@@ -10,14 +10,15 @@ FreezeShot *create_freeze_shot(float x, float y, float speed, float width, float
     new_shot->x = x;
     new_shot->y = y;
     new_shot->speed = speed;
-    new_shot->width = width;
-    new_shot->height = height;
-    new_shot->is_active = true;
+    new_shot->width = width;   // Agora com o campo width
+    new_shot->height = height; // Agora com o campo height
+    new_shot->active = true;   // Renomeado de is_active para active
     new_shot->sprite = sprite;
     new_shot->next = NULL;
 
     return new_shot;
 }
+
 
 // Atualiza a posição dos tiros congelantes
 void update_freeze_shots(FreezeShot **shots, float delta_time, float screen_width, float screen_height) {
@@ -27,7 +28,7 @@ void update_freeze_shots(FreezeShot **shots, float delta_time, float screen_widt
     while (current != NULL) {
         current->y += current->speed * delta_time;
 
-        if (current->y > screen_height || !current->is_active) {
+        if (current->y > screen_height || !current->active) {  // Renomeado is_active para active
             // Remove o tiro se ele sair da tela ou não estiver mais ativo
             FreezeShot *to_destroy = current;
             if (prev) {
@@ -44,14 +45,15 @@ void update_freeze_shots(FreezeShot **shots, float delta_time, float screen_widt
     }
 }
 
+
 // Desenha os tiros congelantes
 void draw_freeze_shots(FreezeShot *shots, bool debug_mode) {
     FreezeShot *current = shots;
 
     while (current != NULL) {
-        if (current->is_active) {
+        if (current->active) {  // Renomeado is_active para active
             if (current->sprite) {
-                al_draw_bitmap(current->sprite, current->x - current->width / 2, current->y - current->height / 2, 0);
+                al_draw_bitmap(current->sprite, current->x - current->width / 2, current->y - current->height / 2, 0); // Desenha o sprite
             } else {
                 // Desenha um retângulo genérico se não houver sprite
                 al_draw_filled_rectangle(
@@ -85,13 +87,14 @@ bool check_freeze_shot_collision(FreezeShot *shot, square *player) {
     if (shot->x + shot->width / 2 >= player->x - player->side / 2 &&
         shot->x - shot->width / 2 <= player->x + player->side / 2 &&
         shot->y + shot->height / 2 >= player->y - player->side / 2 &&
-        shot->y - shot->height / 2 <= player->y + player->side / 2) {
-        shot->is_active = false; // Desativa o tiro após a colisão
+        shot->y - shot->height / 2 <= player->y + player->side / 2) {  // Usando width e height corretamente
+        shot->active = false;  // Renomeado de is_active para active
         return true;
     }
 
     return false;
 }
+
 
 // Destroi a lista de tiros congelantes
 void destroy_freeze_shots(FreezeShot **shots) {

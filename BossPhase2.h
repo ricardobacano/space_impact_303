@@ -28,7 +28,7 @@ BossPhase2 *create_boss_phase2(float x, float y, float speed, int hp, ALLEGRO_BI
 void update_boss_phase2(BossPhase2 *boss, square *player, float delta_time, ALLEGRO_BITMAP *freeze_sprite);
 
 // Desenha o boss e seus ataques
-void draw_boss_phase2(BossPhase2 *boss, bool debug_mode);
+void draw_boss_phase2(BossPhase2 *boss, ALLEGRO_BITMAP *boss_sprite, ALLEGRO_BITMAP *laser_sprite, FreezeShot *freeze_shots, ALLEGRO_BITMAP *freeze_shot_sprite, bool debug_mode);
 
 // Ativa o tiro congelante
 void shoot_freezing_bullet(BossPhase2 *boss, square *player, ALLEGRO_BITMAP *freeze_sprite);

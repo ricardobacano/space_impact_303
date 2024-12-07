@@ -52,88 +52,45 @@ void update_boss_phase2(BossPhase2 *boss, square *player, float delta_time, ALLE
 }
 
 // Desenha o boss e seus ataques
-void draw_boss_phase2(BossPhase2 *boss, bool debug_mode) {
-    if (!boss || !boss->sprite) return;
+void draw_boss_phase2(BossPhase2 *boss, ALLEGRO_BITMAP *boss_sprite, ALLEGRO_BITMAP *laser_sprite, FreezeShot *freeze_shots, ALLEGRO_BITMAP *freeze_shot_sprite, bool debug_mode) {
+    if (!boss || !boss_sprite) return;  // Verifica se o boss e o sprite do boss são válidos
 
-    // Desenha o boss com o sprite fornecido
-    al_draw_bitmap(
-        boss->sprite,
-        boss->x - al_get_bitmap_width(boss->sprite) / 2,
-        boss->y - al_get_bitmap_height(boss->sprite) / 2,
-        0
-    );
+    // Desenha o sprite do boss
+    al_draw_bitmap(boss_sprite, boss->x - al_get_bitmap_width(boss_sprite) / 2, boss->y - al_get_bitmap_height(boss_sprite) / 2, 0);
 
-    // Desenha o laser, se ativo
+    // Se o boss tiver um laser ativo
     if (boss->laser_active) {
-        al_draw_line(
-            boss->x,
-            boss->y + al_get_bitmap_height(boss->sprite) / 2, // Início do laser na parte inferior do boss
-            boss->x,
-            600, // Até o final da tela
-            al_map_rgb(255, 0, 0),
-            5 // Espessura do laser
-        );
+        // Posição do laser
+        float laser_x = boss->x;
+        float laser_y = boss->y - al_get_bitmap_height(laser_sprite) / 2;
+
+        // Desenha o laser
+        al_draw_bitmap(laser_sprite, laser_x, laser_y, 0);
     }
 
-    // Desenha os tiros congelantes
-    FreezeShot *current_freeze_shot = boss->freeze_shots;
-    while (current_freeze_shot != NULL) {
-        if (current_freeze_shot->sprite) {
-            al_draw_bitmap(
-                current_freeze_shot->sprite,
-                current_freeze_shot->x - al_get_bitmap_width(current_freeze_shot->sprite) / 2,
-                current_freeze_shot->y - al_get_bitmap_height(current_freeze_shot->sprite) / 2,
-                0
-            );
-        } else {
-            al_draw_filled_circle(
-                current_freeze_shot->x,
-                current_freeze_shot->y,
-                10, // Raio do tiro congelante (caso não tenha sprite)
-                al_map_rgb(0, 0, 255)
-            );
+    // Se houver tiros congelantes, desenha-os
+    FreezeShot *current_shot = freeze_shots;
+    while (current_shot != NULL) {
+        if (current_shot->active) {
+            // Desenha o tiro congelante
+            al_draw_bitmap(freeze_shot_sprite, current_shot->x - current_shot->width / 2, current_shot->y - current_shot->height / 2, 0);
         }
-        current_freeze_shot = current_freeze_shot->next;
+        current_shot = current_shot->next;
     }
 
-    // Modo de depuração: Desenhar hitbox
+    // Se estiver no modo debug, desenha um contorno ao redor do boss
     if (debug_mode) {
-        // Hitbox do boss
         al_draw_rectangle(
-            boss->x - al_get_bitmap_width(boss->sprite) / 2,
-            boss->y - al_get_bitmap_height(boss->sprite) / 2,
-            boss->x + al_get_bitmap_width(boss->sprite) / 2,
-            boss->y + al_get_bitmap_height(boss->sprite) / 2,
-            al_map_rgb(255, 0, 0), // Cor da hitbox
-            1                      // Espessura da linha
+            boss->x - al_get_bitmap_width(boss_sprite) / 2,
+            boss->y - al_get_bitmap_height(boss_sprite) / 2,
+            boss->x + al_get_bitmap_width(boss_sprite) / 2,
+            boss->y + al_get_bitmap_height(boss_sprite) / 2,
+            al_map_rgb(255, 0, 0),  // Cor vermelha para a borda
+            2  // Espessura da linha
         );
-
-        // Hitboxes dos tiros congelantes
-        FreezeShot *debug_freeze_shot = boss->freeze_shots;
-        while (debug_freeze_shot != NULL) {
-            al_draw_circle(
-                debug_freeze_shot->x,
-                debug_freeze_shot->y,
-                debug_freeze_shot->radius, // Usando o raio do tiro congelante
-                al_map_rgb(0, 255, 0),    // Cor verde para depuração
-                1
-            );
-            debug_freeze_shot = debug_freeze_shot->next;
-        }
-
-        // Hitbox do laser
-        if (boss->laser_active) {
-            al_draw_rectangle(
-                boss->x - 2.5, // Largura do laser / 2
-                boss->y + al_get_bitmap_height(boss->sprite) / 2,
-                boss->x + 2.5,
-                600, // Fim da tela
-                al_map_rgb(255, 255, 0), // Cor amarela para depuração
-                1
-            );
-        }
     }
 }
+
 
 // Ativa o tiro congelante
 void shoot_freezing_bullet(BossPhase2 *boss, square *player, ALLEGRO_BITMAP *freeze_sprite) {
@@ -141,9 +98,10 @@ void shoot_freezing_bullet(BossPhase2 *boss, square *player, ALLEGRO_BITMAP *fre
     FreezeShot *new_shot = create_freeze_shot(
         boss->x, 
         boss->y, 
-        10.0f, // Raio da hitbox
-        200.0f, // Velocidade do tiro
-        freeze_sprite
+        200.0f,  // Velocidade do tiro congelante
+        10.0f,   // Largura do tiro congelante
+        10.0f,   // Altura do tiro congelante
+        freeze_sprite // Passa o sprite do tiro congelante
     );
 
     if (!new_shot) return;
@@ -152,6 +110,7 @@ void shoot_freezing_bullet(BossPhase2 *boss, square *player, ALLEGRO_BITMAP *fre
     new_shot->next = boss->freeze_shots;
     boss->freeze_shots = new_shot;
 }
+
 
 // Detecta e desativa o laser em caso de colisão com o jogador
 bool detect_laser_collision(BossPhase2 *boss, square *player) {

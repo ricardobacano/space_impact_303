@@ -6,7 +6,7 @@
 
 typedef struct FreezeShot {
     float x, y;             // Posição do tiro congelante
-    float radius;           // Raio da hitbox
+    float width, height;    // Largura e altura do tiro
     float speed;            // Velocidade do tiro
     bool active;            // Indica se o tiro está ativo
     ALLEGRO_BITMAP *sprite; // Sprite do tiro congelante
@@ -14,16 +14,16 @@ typedef struct FreezeShot {
 } FreezeShot;
 
 // Cria um novo tiro congelante
-FreezeShot *create_freeze_shot(float x, float y, float radius, float speed, ALLEGRO_BITMAP *sprite);
+FreezeShot *create_freeze_shot(float x, float y, float speed, float width, float height, ALLEGRO_BITMAP *sprite);
 
 // Atualiza a posição dos tiros congelantes
-void update_freeze_shots(FreezeShot **shots, float delta_time);
+void update_freeze_shots(FreezeShot **shots, float delta_time, float screen_width, float screen_height);
 
 // Desenha os tiros congelantes
-void draw_freeze_shots(FreezeShot *shots);
+void draw_freeze_shots(FreezeShot *shots, bool debug_mode);
 
 // Detecta colisões entre os tiros congelantes e o jogador
-bool detect_freeze_collision(FreezeShot *shots, square *player);
+bool check_freeze_shot_collision(FreezeShot *shot, square *player);
 
 // Libera a memória dos tiros congelantes
 void destroy_freeze_shots(FreezeShot **shots);

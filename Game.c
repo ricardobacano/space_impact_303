@@ -27,7 +27,8 @@
 #include "IntroScreen.h"
 #include "BossAppearance.h"
 #include "TransitionScreen.h"
-#include "GameOver.h"
+#include "BossPhase2.h"
+#include "FreezeShot.h"
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -116,8 +117,6 @@ int main() {
         printf("Sprite carregado com sucesso!\n");
     }
 
-
-
     ALLEGRO_BITMAP* scrap_sprite = al_load_bitmap("./imagens/scrap.webp");
     if (!scrap_sprite) {
         fprintf(stderr, "Erro ao carregar o sprite de sucata.\n");
@@ -145,6 +144,24 @@ int main() {
     ALLEGRO_BITMAP *shot2_boss = al_load_bitmap("./imagens/roundaboud.png");
     if (!shot2_boss) {
         fprintf(stderr, "Erro ao carregar o sprite do boss.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *freeze_sprite = al_load_bitmap("./imagens/tiro_gelo.png");
+    if (!freeze_sprite) {
+        fprintf(stderr, "Erro ao carregar o tiro congelante\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *boss2_sprite = al_load_bitmap("./imagens/boss2.png");
+    if (!boss2_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do boss 2.\n");
+        return -1;
+    }
+
+    ALLEGRO_BITMAP *laser_sprite = al_load_bitmap("./imagens/laserboss.png");
+    if (!laser_sprite) {
+        fprintf(stderr, "Erro ao carregar o sprite do boss 2.\n");
         return -1;
     }
 
@@ -190,6 +207,10 @@ int main() {
     float boss_appearance_timer = 0.0f; 
     float boss_appearance_duration = 2.0f; 
     bool is_boss_surfacing = false;
+
+    BossPhase2 *boss2 = NULL;
+
+    FreezeShot *freeze_shots = NULL;
 
     Explosion *explosions = NULL;
     float delta_time = 0.0;
@@ -713,11 +734,22 @@ int main() {
                         }
                     }
 
-                    if (enemy_speed == MAX_ENEMY_SPEED && boss == NULL) {
-                        printf("Boss AINDA APARECE automaticamente!\n");
+                    if (enemy_speed == MAX_ENEMY_SPEED && boss2 == NULL) {
+                        printf("Boss da fase 2 APARECE automaticamente!\n");
+                        
+                        float new_x = X_SCREEN / 2; // Posição X do boss no centro da tela
+                        float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN); // Aleatório no eixo Y
+                        
+                        // Verifica se o boss pode ser criado (sem colisões)
+                        if (!check_collision_between_all_enemies(new_x, new_y, enemies, shooter_enemies)) {
+                            boss2 = create_boss_phase2(new_x, new_y, 1.0f, 500, laser_sprite);  // Agora passando o sprite correto
+                            if (boss2) {
+                                printf("Boss da Fase 2 Criado!\n");
+                            }
+                        }
                     }
 
-                    if (boss == NULL && rand() % 50 == 0) {
+                    if (boss2 == NULL && rand() % 50 == 0) {
                         float new_x = X_SCREEN;
                         float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN); 
 
@@ -730,7 +762,7 @@ int main() {
                         }
                     }
 
-                    if (boss == NULL && rand() % 200 == 0) {  
+                    if (boss2 == NULL && rand() % 200 == 0) {  
                     float new_x = X_SCREEN;
                     float new_y = SPAWN_MARGIN + rand() % (Y_SCREEN - 2 * SPAWN_MARGIN);  
 
@@ -814,9 +846,6 @@ int main() {
                         current_shooter = current_shooter->next;
                     }
 
-                    if (boss != NULL) {
-                        update_boss(boss, player_1);
-                    }
 
                     delta_time = 5.0 / 30.0;
 
@@ -827,7 +856,6 @@ int main() {
                     update_explosions(&explosions, delta_time);
                     shield_update(player_1->shield, al_get_time());
                     shieldbar_update(player_1_shieldbar, player_1->shield->is_active ? player_1->shield->duration - (al_get_time() - player_1->shield->start_time) : 0);
-                    update_boss(boss,player_1);
                     shoot_pattern = update_boss_shooting(boss, frame_count, shoot_pattern, shot1_boss, shot2_boss);
                     laser_update(laser);
 
@@ -839,43 +867,13 @@ int main() {
                     check_kill(player_1, &enemies, score, &explosions, &enemies_destroyed);
                     check_kill_shooter_enemies(player_1, &shooter_enemies, score, &explosions);
                     check_collision_with_player_shooter_enemy(player_1, &shooter_enemies);
-                    check_player_bullets_with_boss(player_1, boss);
                     laser_check_collision_with_enemies(laser, &enemies,score);
-                    laser_check_collision_with_boss(laser, boss);
-                    check_boss_bullets_with_player(player_1, boss);
                     laser_check_collision_with_shooter_enemies(laser, &shooter_enemies,score);
 
-                    if (boss != NULL) {
-                        check_boss_collision_with_player(player_1, boss);
-                    }
 
                     healthbar_update(player_1_healthbar, player_1->hp);
                     p1k = (player_1->hp <= 0) ? 1 : 0;
                 }
-
-                if (boss != NULL) {
-                    if (frame_count % 150 == 0) {
-                        shoot_pattern = (shoot_pattern == 1) ? 2 : 1;
-                    }
-
-                    if (shoot_pattern == 1 && boss->cooldown == 0) {
-                        boss_shoot(boss, shot1_boss, shot2_boss);
-                    } else if (shoot_pattern == 2 && boss->cooldown == 0) {
-                        boss_shoot(boss, shot2_boss, shot1_boss);
-                    }
-
-                    update_boss_shots(boss);
-
-                    boss_shot *current_shot = boss->shots;
-                    while (current_shot != NULL) {
-                        boss_shot_draw(current_shot, current_shot->sprite);
-                        current_shot = current_shot->next;
-                    }
-
-                    check_player_bullets_with_boss_shots(player_1, boss);
-
-                }
-
 
                 Scrap *prev_scrap = NULL;
                 Scrap *current_scrap = scrap_list;
@@ -909,6 +907,12 @@ int main() {
                     }
                 }
 
+                if (boss2) {
+                    update_boss_phase2(boss2, player_1, delta_time, freeze_sprite);  // Passa o sprite do tiro congelante
+
+                    // Desenha o Boss
+                    draw_boss_phase2(boss2, boss2_sprite, laser_sprite, freeze_shots, freeze_sprite, debug_mode);
+                }
                 al_clear_to_color(al_map_rgb(0, 0, 0));
 
                 background_draw();
@@ -947,20 +951,6 @@ int main() {
                                     bullet->y - al_get_bitmap_height(shooter_bullet_sprite) / 2,
                                     0);
                     }
-                }
-
-                if (is_boss_surfacing) {
-                    boss_appearance_timer += delta_time;
-
-                    draw_boss_appearance(boss_sprite, boss_appearance_timer / boss_appearance_duration, X_SCREEN, Y_SCREEN);
-
-                    if (boss_appearance_timer >= boss_appearance_duration) {
-                        is_boss_surfacing = false; 
-                    }
-                } else if (boss != NULL) {
-                
-                    draw_boss(boss, debug_mode);
-                    update_boss(boss, player_1);
                 }
 
 
