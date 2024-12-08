@@ -19,7 +19,6 @@ FreezeShot *create_freeze_shot(float x, float y, float speed, float width, float
     return new_shot;
 }
 
-
 // Atualiza a posição dos tiros congelantes
 void update_freeze_shots(FreezeShot **shots, float delta_time, float screen_width, float screen_height) {
     FreezeShot *current = *shots;
@@ -47,38 +46,20 @@ void update_freeze_shots(FreezeShot **shots, float delta_time, float screen_widt
 
 
 // Desenha os tiros congelantes
-void draw_freeze_shots(FreezeShot *shots, bool debug_mode) {
+void draw_freeze_shots(FreezeShot *shots) {
     FreezeShot *current = shots;
 
     while (current != NULL) {
-        if (current->active) {  // Renomeado is_active para active
-            if (current->sprite) {
-                al_draw_bitmap(current->sprite, current->x - current->width / 2, current->y - current->height / 2, 0); // Desenha o sprite
-            } else {
-                // Desenha um retângulo genérico se não houver sprite
-                al_draw_filled_rectangle(
-                    current->x - current->width / 2,
-                    current->y - current->height / 2,
-                    current->x + current->width / 2,
-                    current->y + current->height / 2,
-                    al_map_rgb(0, 255, 255)
-                );
-            }
-
-            if (debug_mode) {
-                al_draw_rectangle(
-                    current->x - current->width / 2,
-                    current->y - current->height / 2,
-                    current->x + current->width / 2,
-                    current->y + current->height / 2,
-                    al_map_rgb(255, 0, 0),
-                    1
-                );
-            }
+        if (current->active && current->sprite) { // Verifica se o tiro está ativo e tem sprite
+            al_draw_bitmap(current->sprite, 
+                           current->x - al_get_bitmap_width(current->sprite) / 2, 
+                           current->y - al_get_bitmap_height(current->sprite) / 2, 
+                           0); // Desenha o sprite centralizado
         }
-        current = current->next;
+        current = current->next; // Avança para o próximo tiro
     }
 }
+
 
 // Verifica colisão com o jogador
 bool check_freeze_shot_collision(FreezeShot *shot, square *player) {

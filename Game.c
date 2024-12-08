@@ -907,13 +907,8 @@ int main() {
                     }
                 }
 
-                if (boss2) {
-                    update_boss_phase2(boss2, player_1, delta_time, freeze_sprite);  // Passa o sprite do tiro congelante
-
-                    // Desenha o Boss
-                    draw_boss_phase2(boss2, boss2_sprite, laser_sprite, freeze_shots, freeze_sprite, debug_mode);
-                }
                 al_clear_to_color(al_map_rgb(0, 0, 0));
+
 
                 background_draw();
                 healthbar_draw(player_1_healthbar);
@@ -935,6 +930,14 @@ int main() {
                 draw_explosions(explosions, explosion_sprite);
 
                 laser_draw(laser);
+
+                if (boss2) {
+                    update_boss_phase2(boss2, player_1, delta_time, freeze_sprite);  // Passa o sprite do tiro congelante
+
+                    // Desenha o Boss
+                    draw_boss_phase2(boss2, boss2_sprite, laser_sprite, freeze_shots, freeze_sprite, debug_mode);
+                    printf("Desenhando boss na posição: (%f, %f)\n", boss2->x, boss2->y);
+                }
 
 
                 for (bullet *index = player_1->gun->shots; index != NULL; index = index->next) {
