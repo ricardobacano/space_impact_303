@@ -90,12 +90,5 @@
   - Ataques especiais adquiridos durante as fases.
   - Sistema de vida e escudo.
   - Aprimoramento de habilidades apartir da coleta de sucata.
-    
-## ✉️ Contato
-
-Se tiver dúvidas ou sugestões, entre em contato:
-
-- **Email**: [seuemail@example.com](mailto:seuemail@example.com)
-- **GitHub**: [github.com/seu-usuario](https://github.com/seu-usuario)
 
 ---
